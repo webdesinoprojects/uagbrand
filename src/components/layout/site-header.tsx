@@ -31,6 +31,7 @@ export function SiteHeader({
 }: SiteHeaderProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [filterOpen, setFilterOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const [hasScrolled, setHasScrolled] = useState(false);
   const isOverlay = variant === "overlay";
   const accountLabel = isLoggedIn ? "Account" : "Login / Register";
@@ -113,7 +114,7 @@ export function SiteHeader({
             <form
               action="/products"
               className={cn(
-                "flex h-9 w-[104px] shrink-0 items-center gap-2 rounded-full px-3 transition sm:h-10 sm:w-40 lg:w-52",
+                "hidden h-9 w-40 shrink-0 items-center gap-2 rounded-full px-3 transition md:flex lg:w-52",
                 "bg-white/18 text-white backdrop-blur-sm",
               )}
             >
@@ -132,6 +133,17 @@ export function SiteHeader({
                 <Search size={16} />
               </button>
             </form>
+
+            <button
+              type="button"
+              title="Search"
+              aria-label="Open search"
+              aria-expanded={searchOpen}
+              onClick={() => setSearchOpen((value) => !value)}
+              className={cn(iconButtonClassName, "md:hidden")}
+            >
+              <Search size={17} />
+            </button>
 
             <Link
               href="/account"
@@ -163,6 +175,37 @@ export function SiteHeader({
             </Link>
           </div>
         </div>
+
+        {searchOpen ? (
+          <form
+            action="/products"
+            className="absolute left-3 right-3 top-[calc(100%+8px)] z-50 flex h-12 items-center gap-2 rounded-full border border-white/12 bg-black/88 px-4 text-white shadow-2xl backdrop-blur-md md:hidden"
+          >
+            <input
+              autoFocus
+              name="q"
+              type="search"
+              placeholder="Search earbuds, watches, brands"
+              className="min-w-0 flex-1 bg-transparent text-sm font-semibold outline-none placeholder:text-white/60"
+            />
+            <button
+              type="submit"
+              title="Search"
+              aria-label="Search products"
+              className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white text-slate-950 transition hover:bg-accent"
+            >
+              <Search size={16} />
+            </button>
+            <button
+              type="button"
+              aria-label="Close search"
+              onClick={() => setSearchOpen(false)}
+              className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-white/70 transition hover:bg-white/12 hover:text-white"
+            >
+              <X size={16} />
+            </button>
+          </form>
+        ) : null}
       </header>
 
       <MenuDrawer

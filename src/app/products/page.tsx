@@ -9,6 +9,10 @@ import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
 import { MobileBottomNav } from "@/components/layout/mobile-bottom-nav";
 import {
+  BrandProductCarousel,
+  type BrandProductCarouselSlide,
+} from "@/components/products/brand-product-carousel";
+import {
   ProductAvailabilityGrid,
   type ProductAvailabilityItem,
 } from "@/components/products/out-of-stock-grid";
@@ -76,6 +80,12 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
     brands: data.brands,
     categories: data.categories,
   });
+  const carouselSlides = getBrandProductCarouselSlides({
+    brand: selectedBrand,
+    category: selectedCategory,
+    brands: data.brands,
+    categories: data.categories,
+  });
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -87,34 +97,38 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
             category: selectedCategory,
           })}
         />
-        <section className="rounded-lg border border-border bg-surface p-5 shadow-sm sm:p-7">
-          <p className="text-sm font-bold uppercase text-brand">
-            Product listing
-          </p>
-          <h1 className="mt-3 text-3xl font-black text-foreground sm:text-4xl">
-            {listingTitle}
-          </h1>
-          <p className="mt-3 max-w-2xl text-sm leading-6 text-muted">
-            {listingDescription}
-          </p>
+        {carouselSlides.length > 0 ? (
+          <BrandProductCarousel slides={carouselSlides} />
+        ) : (
+          <section className="rounded-lg border border-border bg-surface p-5 shadow-sm sm:p-7">
+            <p className="text-sm font-bold uppercase text-brand">
+              Product listing
+            </p>
+            <h1 className="mt-3 text-3xl font-black text-foreground sm:text-4xl">
+              {listingTitle}
+            </h1>
+            <p className="mt-3 max-w-2xl text-sm leading-6 text-muted">
+              {listingDescription}
+            </p>
 
-          <div className="mt-6 flex flex-wrap gap-2">
-            {activeFilters.length > 0 ? (
-              activeFilters.map(([key, value]) => (
-                <span
-                  key={key}
-                  className="rounded-md border border-border bg-surface-soft px-3 py-2 text-sm font-bold text-foreground"
-                >
-                  {toTitleCase(key)}: {toTitleCase(String(value))}
+            <div className="mt-6 flex flex-wrap gap-2">
+              {activeFilters.length > 0 ? (
+                activeFilters.map(([key, value]) => (
+                  <span
+                    key={key}
+                    className="rounded-md border border-border bg-surface-soft px-3 py-2 text-sm font-bold text-foreground"
+                  >
+                    {toTitleCase(key)}: {toTitleCase(String(value))}
+                  </span>
+                ))
+              ) : (
+                <span className="rounded-md border border-border bg-surface-soft px-3 py-2 text-sm font-bold text-muted">
+                  No filters selected
                 </span>
-              ))
-            ) : (
-              <span className="rounded-md border border-border bg-surface-soft px-3 py-2 text-sm font-bold text-muted">
-                No filters selected
-              </span>
-            )}
-          </div>
-        </section>
+              )}
+            </div>
+          </section>
+        )}
 
         <ProductAvailabilityGrid items={productItems} />
 
@@ -163,7 +177,9 @@ function getProductAvailabilityItems({
   };
 
   if (brand && category) {
-    return [makeItem({ itemBrand: brand, itemCategory: category })];
+    return [category, ...categories.filter((item) => item.slug !== category.slug)]
+      .slice(0, 4)
+      .map((item) => makeItem({ itemBrand: brand, itemCategory: item }));
   }
 
   if (category) {
@@ -193,6 +209,49 @@ function getProductAvailabilityItems({
   return getDisplayBrands(brands).map((item) =>
     makeItem({ itemBrand: item, itemCategory: fallbackCategory }),
   );
+}
+
+function getBrandProductCarouselSlides({
+  brand,
+  category,
+  brands,
+  categories,
+}: {
+  brand: Brand | undefined;
+  category: Category | undefined;
+  brands: Brand[];
+  categories: Category[];
+}): BrandProductCarouselSlide[] {
+  if (brand) {
+    return [
+      ...(category ? [category] : []),
+      ...categories.filter((item) => item.slug !== category?.slug),
+    ]
+      .slice(0, 3)
+      .map((item) => ({
+        id: `brand-carousel-${brand.slug}-${item.slug}`,
+        eyebrow: `${brand.name} brand carousel`,
+        title: `${brand.name} ${item.shortName}`,
+        description: `${item.description} Explore ${brand.name} picks by category.`,
+        href: `/products?brand=${brand.slug}&category=${item.slug}`,
+        image: item.image,
+      }));
+  }
+
+  if (category) {
+    return getDisplayBrands(brands)
+      .slice(0, 3)
+      .map((item) => ({
+        id: `category-carousel-${category.slug}-${item.slug}`,
+        eyebrow: `${category.shortName} brand carousel`,
+        title: `${item.name} ${category.shortName}`,
+        description: `${category.description} Browse brand options in this category.`,
+        href: `/products?brand=${item.slug}&category=${category.slug}`,
+        image: item.logo,
+      }));
+  }
+
+  return [];
 }
 
 function getDisplayBrands(brands: Brand[]) {
