@@ -1,0 +1,50 @@
+import Link from "next/link";
+
+import { OptimizedImage } from "@/components/ui/optimized-image";
+import { SectionHeader } from "@/components/ui/section-header";
+import type { Brand } from "@/types";
+
+type BrandDealsProps = {
+  brands: Brand[];
+};
+
+export function BrandDeals({ brands }: BrandDealsProps) {
+  return (
+    <section id="brands" className="soft-enter bg-background py-8 sm:py-10">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <SectionHeader
+          eyebrow="Tap a logo to shop"
+          title="Only Deals In Brands"
+          description="Each brand logo opens its matching product list."
+        />
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+          {brands.map((brand) => (
+            <Link
+              key={brand.slug}
+              href={brand.href}
+              className="card-hover group rounded-lg border border-border bg-surface p-3 hover:border-brand"
+            >
+              <OptimizedImage
+                src={brand.logo.src}
+                alt={brand.logo.alt}
+                width={brand.logo.width}
+                height={brand.logo.height}
+                sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 16vw"
+                wrapperClassName="aspect-[11/5] rounded-lg border border-border bg-background"
+                className="h-full w-full object-contain p-3"
+              />
+              <div className="mt-3">
+                <p className="truncate text-sm font-extrabold text-foreground">
+                  {brand.name}
+                </p>
+                <p className="mt-1 truncate text-xs font-bold text-muted">
+                  {brand.deal}
+                </p>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
