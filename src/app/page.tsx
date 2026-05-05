@@ -19,7 +19,11 @@ export default async function Home() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <SiteHeader brands={data.brands} categories={data.categories} />
+      <SiteHeader
+        brands={data.brands}
+        categories={data.categories}
+        variant="overlay"
+      />
       <Suspense fallback={<HomeSkeleton />}>
         <main>
           <HeroSlider slides={data.heroSlides} />

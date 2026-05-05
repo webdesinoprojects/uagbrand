@@ -11,96 +11,157 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
-import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { cn } from "@/lib/utils";
 import type { Brand, Category } from "@/types";
 
 type SiteHeaderProps = {
   brands: Brand[];
   categories: Category[];
+  variant?: "solid" | "overlay";
+  isLoggedIn?: boolean;
 };
 
-export function SiteHeader({ brands, categories }: SiteHeaderProps) {
+export function SiteHeader({
+  brands,
+  categories,
+  variant = "solid",
+  isLoggedIn = false,
+}: SiteHeaderProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [filterOpen, setFilterOpen] = useState(false);
+  const [hasScrolled, setHasScrolled] = useState(false);
+  const isOverlay = variant === "overlay";
+  const accountLabel = isLoggedIn ? "Account" : "Login / Register";
+
+  useEffect(() => {
+    if (!isOverlay) {
+      return;
+    }
+
+    const updateScrollState = () => {
+      setHasScrolled(window.scrollY > 8);
+    };
+
+    updateScrollState();
+    window.addEventListener("scroll", updateScrollState, { passive: true });
+
+    return () => window.removeEventListener("scroll", updateScrollState);
+  }, [isOverlay]);
+
+  const iconButtonClassName = cn(
+    "grid h-9 w-9 shrink-0 place-items-center rounded-md transition sm:h-10 sm:w-10",
+    isOverlay && !hasScrolled
+      ? "bg-transparent text-white hover:bg-white/10"
+      : "bg-black/16 text-white backdrop-blur-sm hover:bg-white/14",
+  );
 
   return (
     <>
-      <header className="sticky top-0 z-40 bg-background/88 px-3 py-3 backdrop-blur-xl">
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-2 rounded-xl border border-border bg-surface px-3 shadow-[var(--shadow-soft)] sm:gap-3 sm:px-4 md:justify-start">
-          <button
-            type="button"
-            aria-label="Open menu"
-            onClick={() => setMenuOpen(true)}
-            className="grid h-11 w-11 shrink-0 place-items-center rounded-lg border border-border bg-background text-foreground transition hover:border-foreground hover:shadow-md"
-          >
-            <Menu size={20} />
-          </button>
+      <header
+        className={cn(
+          "relative inset-x-0 top-0 z-40 px-2 py-2 sm:px-4",
+          isOverlay && !hasScrolled
+            ? "sticky -mb-[65px] border-b border-transparent bg-transparent text-white transition-colors duration-200"
+            : cn(
+                "sticky border-b border-white/10 bg-black/78 text-white shadow-lg backdrop-blur-md transition-colors duration-200",
+                isOverlay ? "-mb-[65px]" : null,
+              ),
+        )}
+      >
+        <div
+          className={cn(
+            "mx-auto grid h-12 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2",
+            "max-w-[1680px] px-1 sm:px-4",
+          )}
+        >
+          <div className="flex min-w-0 items-center gap-1.5 sm:gap-2">
+            <button
+              type="button"
+              title="Menu"
+              aria-label="Open menu"
+              onClick={() => setMenuOpen(true)}
+              className={iconButtonClassName}
+            >
+              <Menu size={18} />
+            </button>
+
+            <button
+              type="button"
+              title="Filters"
+              aria-label="Open filters"
+              onClick={() => setFilterOpen(true)}
+              className={iconButtonClassName}
+            >
+              <SlidersHorizontal size={17} />
+            </button>
+          </div>
 
           <Link
             href="/"
-            className="flex min-w-0 shrink-0 items-center gap-2 text-foreground"
+            aria-label="AllEarbuds home"
+            className={cn(
+              "min-w-0 justify-self-center truncate px-2 text-center font-display text-[11px] font-black uppercase tracking-normal sm:text-sm lg:text-base",
+              "text-white",
+            )}
           >
-            <span className="grid h-11 w-11 place-items-center rounded-lg bg-brand text-sm font-black text-white shadow-sm">
-              AE
-            </span>
-            <span className="hidden font-display text-lg font-black tracking-tight sm:block">
-              allearbuds
-            </span>
+            ALLEARBUDS.COM
           </Link>
 
-          <form
-            action="/products"
-            className="mx-auto hidden h-11 max-w-2xl flex-1 items-center gap-2 rounded-full border border-border bg-background px-4 shadow-inner md:flex"
-          >
-            <Search size={18} className="text-muted" />
-            <input
-              name="q"
-              type="search"
-              placeholder="Search earbuds, watches, brands"
-              className="min-w-0 flex-1 bg-transparent text-sm font-semibold outline-none placeholder:text-muted"
-            />
-          </form>
+          <div className="flex min-w-0 items-center justify-end gap-1.5 sm:gap-2">
+            <form
+              action="/products"
+              className={cn(
+                "flex h-9 w-[104px] shrink-0 items-center gap-2 rounded-full px-3 transition sm:h-10 sm:w-40 lg:w-52",
+                "bg-white/18 text-white backdrop-blur-sm",
+              )}
+            >
+              <input
+                name="q"
+                type="search"
+                placeholder="Search"
+                className="min-w-0 flex-1 bg-transparent text-xs font-semibold outline-none placeholder:text-current sm:text-sm"
+              />
+              <button
+                type="submit"
+                title="Search"
+                aria-label="Search products"
+                className="grid h-6 w-6 shrink-0 place-items-center rounded-full transition hover:bg-white/16"
+              >
+                <Search size={16} />
+              </button>
+            </form>
 
-          <button
-            type="button"
-            aria-label="Open filters"
-            onClick={() => setFilterOpen(true)}
-            className="grid h-11 w-11 shrink-0 place-items-center rounded-lg border border-border bg-background text-foreground transition hover:border-foreground hover:shadow-md"
-          >
-            <SlidersHorizontal size={18} />
-          </button>
+            <Link
+              href="/account"
+              title={accountLabel}
+              aria-label={accountLabel}
+              className={cn(
+                "flex h-9 shrink-0 items-center justify-center gap-2 rounded-md px-2 text-xs font-extrabold transition sm:h-10 sm:px-3",
+                isOverlay && !hasScrolled
+                  ? "bg-transparent text-white hover:bg-white/10"
+                  : "bg-black/16 text-white backdrop-blur-sm hover:bg-white/14",
+              )}
+            >
+              <UserRound size={16} />
+              <span className="hidden whitespace-nowrap lg:inline">
+                {accountLabel}
+              </span>
+            </Link>
 
-          <ThemeToggle />
-
-          <Link
-            href="/products"
-            aria-label="Search products"
-            className="grid h-11 w-11 shrink-0 place-items-center rounded-lg border border-border bg-background text-foreground transition hover:border-foreground hover:shadow-md md:hidden"
-          >
-            <Search size={18} />
-          </Link>
-
-          <Link
-            href="/account"
-            aria-label="Account"
-            className="hidden h-11 items-center gap-2 rounded-lg border border-border bg-background px-3 text-sm font-extrabold text-foreground transition hover:border-foreground hover:shadow-md lg:flex"
-          >
-            <UserRound size={17} />
-            Account
-          </Link>
-
-          <Link
-            href="/cart"
-            aria-label="Cart"
-            className="relative grid h-11 w-11 shrink-0 place-items-center rounded-lg border border-border bg-background text-foreground transition hover:border-foreground hover:shadow-md"
-          >
-            <ShoppingCart size={18} />
-            <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-md bg-accent px-1 text-[11px] font-black text-slate-950">
-              0
-            </span>
-          </Link>
+            <Link
+              href="/cart"
+              title="Cart"
+              aria-label="Cart"
+              className={cn("relative", iconButtonClassName)}
+            >
+              <ShoppingCart size={17} />
+              <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-md bg-accent px-1 text-[11px] font-black text-slate-950">
+                0
+              </span>
+            </Link>
+          </div>
         </div>
       </header>
 

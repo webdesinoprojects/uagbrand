@@ -55,6 +55,57 @@ const homePageData = {
         label: "hero-accessories-sale.svg",
       },
     },
+    {
+      id: "neckband-audio",
+      eyebrow: "Neckband picks",
+      title: "All-day audio that stays light",
+      description:
+        "Wireless neckbands for calls, commutes and workout playlists from daily-use brands.",
+      offer: "Battery picks from Rs. 699",
+      ctaLabel: "Shop neckbands",
+      href: "/products?category=neckband",
+      image: {
+        src: "/assets/hero-carousel/hero-neckband-sale.svg",
+        alt: "Neckband audio sale banner",
+        width: 1120,
+        height: 560,
+        label: "hero-neckband-sale.svg",
+      },
+    },
+    {
+      id: "speaker-week",
+      eyebrow: "Room-filling sound",
+      title: "Bluetooth speakers for every desk",
+      description:
+        "Portable speakers, compact party audio and everyday sound bars organized by brand and price.",
+      offer: "Speaker deals refreshed weekly",
+      ctaLabel: "Shop speakers",
+      href: "/products?category=speaker",
+      image: {
+        src: "/assets/hero-carousel/hero-speaker-sale.svg",
+        alt: "Bluetooth speaker sale banner",
+        width: 1120,
+        height: 560,
+        label: "hero-speaker-sale.svg",
+      },
+    },
+    {
+      id: "power-bank-week",
+      eyebrow: "Charge anywhere",
+      title: "Power banks and charging gear",
+      description:
+        "Fast chargers, cables and backup power options for travel, work and daily carry.",
+      offer: "Charging gear from Rs. 499",
+      ctaLabel: "Shop power gear",
+      href: "/products?category=power-bank",
+      image: {
+        src: "/assets/hero-carousel/hero-powerbank-sale.svg",
+        alt: "Power bank and charger sale banner",
+        width: 1120,
+        height: 560,
+        label: "hero-powerbank-sale.svg",
+      },
+    },
   ],
   quickMenus: [
     { label: "Top deals", href: "/products?sort=deals", icon: "badge-percent" },

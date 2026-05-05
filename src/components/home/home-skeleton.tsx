@@ -1,32 +1,20 @@
 export function HomeSkeleton() {
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <div className="sticky top-0 z-40 border-b border-border bg-surface">
-        <div className="mx-auto flex h-16 max-w-7xl items-center gap-3 px-4 sm:px-6 lg:px-8">
-          <div className="skeleton h-10 w-10 rounded-md" />
-          <div className="skeleton h-10 w-10 rounded-md" />
-          <div className="skeleton h-9 w-48 rounded-md" />
-          <div className="ml-auto hidden h-10 w-72 rounded-md bg-surface-soft xl:block" />
-          <div className="skeleton h-10 w-10 rounded-md" />
-          <div className="skeleton h-10 w-10 rounded-md" />
-        </div>
-      </div>
-
       <main>
-        <section className="border-b border-border bg-surface-soft">
-          <div className="mx-auto grid max-w-7xl gap-5 px-4 py-5 sm:px-6 lg:grid-cols-[0.82fr_1.18fr] lg:px-8 lg:py-7">
-            <div className="rounded-lg border border-border bg-surface p-5 sm:p-7">
-              <div className="skeleton h-4 w-28 rounded-sm" />
-              <div className="skeleton mt-5 h-12 w-11/12 rounded-md" />
-              <div className="skeleton mt-3 h-12 w-8/12 rounded-md" />
-              <div className="skeleton mt-6 h-5 w-full rounded-sm" />
-              <div className="skeleton mt-3 h-5 w-9/12 rounded-sm" />
-              <div className="mt-7 flex gap-3">
-                <div className="skeleton h-12 w-40 rounded-md" />
-                <div className="skeleton h-12 w-36 rounded-md" />
-              </div>
+        <section className="relative h-[100svh] min-h-[650px] max-h-[760px] overflow-hidden bg-surface md:h-[78svh] md:min-h-[520px] md:max-h-[820px] lg:h-[82svh]">
+          <div className="skeleton absolute inset-0" />
+          <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.76)_0%,rgba(0,0,0,0.52)_36%,rgba(0,0,0,0.1)_62%,rgba(0,0,0,0.3)_100%)] md:bg-[linear-gradient(90deg,rgba(0,0,0,0.78)_0%,rgba(0,0,0,0.54)_34%,rgba(0,0,0,0.16)_68%,rgba(0,0,0,0.05)_100%)]" />
+          <div className="absolute left-0 top-0 flex w-full max-w-xl flex-col px-5 pt-24 sm:px-8 md:inset-y-0 md:max-w-3xl md:justify-center md:px-12 md:py-24 lg:px-20">
+            <div className="skeleton h-4 w-28 rounded-sm" />
+            <div className="skeleton mt-5 h-12 w-11/12 rounded-md" />
+            <div className="skeleton mt-3 h-12 w-8/12 rounded-md" />
+            <div className="skeleton mt-6 h-5 w-full rounded-sm" />
+            <div className="skeleton mt-3 h-5 w-9/12 rounded-sm" />
+            <div className="mt-7 flex gap-3">
+              <div className="skeleton h-12 w-40 rounded-md" />
+              <div className="skeleton h-12 w-36 rounded-md" />
             </div>
-            <div className="skeleton aspect-[16/9] rounded-lg border border-border lg:min-h-[430px]" />
           </div>
         </section>
 

@@ -11,6 +11,9 @@ Replace these placeholder files with final artwork. Keep the same paths if you w
 - `public/assets/hero-carousel/hero-earbuds-sale.svg`
 - `public/assets/hero-carousel/hero-smartwatch-sale.svg`
 - `public/assets/hero-carousel/hero-accessories-sale.svg`
+- `public/assets/hero-carousel/hero-neckband-sale.svg`
+- `public/assets/hero-carousel/hero-speaker-sale.svg`
+- `public/assets/hero-carousel/hero-powerbank-sale.svg`
 
 ## Brand Logos
 
