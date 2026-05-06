@@ -104,7 +104,7 @@ export const staticPages = {
         title: "Brand-first browsing",
         description: "Logo tiles and filters take shoppers straight to brand lists.",
         icon: "badge",
-        meta: "17 brands",
+        meta: "18 brands",
       },
       {
         title: "Dispatch mindset",

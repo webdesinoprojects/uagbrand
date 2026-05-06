@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 
 import { OptimizedImage } from "@/components/ui/optimized-image";
 import { SectionHeader } from "@/components/ui/section-header";
+import { useSwipeCarousel } from "@/hooks/use-swipe-carousel";
 import { cn } from "@/lib/utils";
 import type { CollabSlide } from "@/types";
 
@@ -30,10 +31,6 @@ export function WarehouseCarousel({ slides }: WarehouseCarouselProps) {
     return () => window.clearInterval(timer);
   }, [isPlaying, slides.length]);
 
-  if (!activeSlide) {
-    return null;
-  }
-
   const nextSlide = () => {
     setActiveIndex((current) => (current + 1) % slides.length);
   };
@@ -41,6 +38,16 @@ export function WarehouseCarousel({ slides }: WarehouseCarouselProps) {
   const previousSlide = () => {
     setActiveIndex((current) => (current - 1 + slides.length) % slides.length);
   };
+
+  const swipeHandlers = useSwipeCarousel({
+    itemCount: slides.length,
+    onNext: nextSlide,
+    onPrevious: previousSlide,
+  });
+
+  if (!activeSlide) {
+    return null;
+  }
 
   return (
     <section className="soft-enter bg-background py-10">
@@ -51,7 +58,10 @@ export function WarehouseCarousel({ slides }: WarehouseCarouselProps) {
           description="A separate auto-swipe carousel for warehouse, packing and fast delivery proof images."
         />
 
-        <article className="relative h-[360px] overflow-hidden rounded-xl border border-border bg-surface shadow-[var(--shadow-soft)] sm:h-[500px]">
+        <article
+          {...swipeHandlers}
+          className="relative h-[360px] touch-pan-y select-none overflow-hidden rounded-xl border border-border bg-surface shadow-[var(--shadow-soft)] sm:h-[500px]"
+        >
           <Link href={activeSlide.href} className="group block h-full">
             <OptimizedImage
               key={activeSlide.id}

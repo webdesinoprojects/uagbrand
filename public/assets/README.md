@@ -26,6 +26,7 @@ Use SVG for official brand logos whenever possible. SVG is usually best for OneP
 - `public/assets/brand-logos/noise-logo.svg`
 - `public/assets/brand-logos/ptron-logo.svg`
 - `public/assets/brand-logos/ubon-logo.svg`
+- `public/assets/brand-logos/go-boult-logo.svg`
 - `public/assets/brand-logos/boult-audio-logo.svg`
 - `public/assets/brand-logos/jbl-logo.svg`
 - `public/assets/brand-logos/zebronics-logo.svg`

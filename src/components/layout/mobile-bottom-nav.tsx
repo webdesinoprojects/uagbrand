@@ -109,7 +109,7 @@ export function MobileBottomNav({ brands, categories }: MobileBottomNavProps) {
             className="absolute inset-0 h-full w-full"
             onClick={() => setAccountOpen(false)}
           />
-          <section className="absolute bottom-[82px] left-1/2 w-[min(360px,calc(100vw-24px))] -translate-x-1/2 rounded-xl border border-border bg-surface p-2 shadow-2xl">
+          <section className="absolute bottom-[76px] left-1/2 w-[min(360px,calc(100vw-24px))] -translate-x-1/2 rounded-xl border border-border bg-surface p-2 shadow-2xl">
             <AccountQuickLink
               href="/account"
               icon={<UserRound size={18} />}
@@ -126,7 +126,7 @@ export function MobileBottomNav({ brands, categories }: MobileBottomNavProps) {
         </div>
       ) : null}
 
-      <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/96 px-2 py-2 shadow-2xl backdrop-blur lg:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/96 px-2 py-1.5 shadow-2xl backdrop-blur lg:hidden">
         <div className="mx-auto grid max-w-md grid-cols-4 gap-1">
           <MobileNavLink href="/" icon={<Home size={19} />} label="Home" />
           <MobileNavLink
@@ -142,7 +142,7 @@ export function MobileBottomNav({ brands, categories }: MobileBottomNavProps) {
               setOpen(false);
               setAccountOpen((value) => !value);
             }}
-            className="flex h-14 flex-col items-center justify-center gap-1 rounded-lg text-[11px] font-bold leading-none text-muted transition hover:bg-surface-soft hover:text-brand"
+            className="flex h-[52px] flex-col items-center justify-center gap-1 rounded-lg text-[11px] font-bold leading-none text-muted transition hover:bg-surface-soft hover:text-brand"
           >
             <UserRound size={19} />
             <span>My account</span>
@@ -153,7 +153,7 @@ export function MobileBottomNav({ brands, categories }: MobileBottomNavProps) {
               setAccountOpen(false);
               setOpen(true);
             }}
-            className="flex h-14 flex-col items-center justify-center gap-1 rounded-lg text-xs font-bold text-muted transition hover:bg-surface-soft hover:text-brand"
+            className="flex h-[52px] flex-col items-center justify-center gap-1 rounded-lg text-xs font-bold text-muted transition hover:bg-surface-soft hover:text-brand"
           >
             <Menu size={19} />
             Menu
@@ -204,7 +204,7 @@ function MobileNavLink({
   return (
     <Link
       href={href}
-      className="flex h-14 flex-col items-center justify-center gap-1 rounded-lg text-xs font-bold text-muted transition hover:bg-surface-soft hover:text-brand"
+      className="flex h-[52px] flex-col items-center justify-center gap-1 rounded-lg text-xs font-bold text-muted transition hover:bg-surface-soft hover:text-brand"
     >
       {icon}
       {label}

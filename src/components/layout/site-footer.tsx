@@ -67,7 +67,7 @@ export function SiteFooter({ brands, categories }: SiteFooterProps) {
         </FooterColumn>
 
         <FooterColumn title="Brands">
-          {brands.slice(0, 10).map((brand) => (
+          {brands.map((brand) => (
             <FooterLink key={brand.slug} href={brand.href}>
               {brand.name}
             </FooterLink>

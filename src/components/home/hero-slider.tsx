@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { OptimizedImage } from "@/components/ui/optimized-image";
+import { useSwipeCarousel } from "@/hooks/use-swipe-carousel";
 import { cn } from "@/lib/utils";
 import type { HeroSlide } from "@/types";
 
@@ -39,10 +40,6 @@ export function HeroSlider({ slides }: HeroSliderProps) {
     return () => window.clearInterval(timer);
   }, [isMobile, slides.length]);
 
-  if (!activeSlide) {
-    return null;
-  }
-
   const nextSlide = () => {
     setActiveIndex((current) => (current + 1) % slides.length);
   };
@@ -51,9 +48,22 @@ export function HeroSlider({ slides }: HeroSliderProps) {
     setActiveIndex((current) => (current - 1 + slides.length) % slides.length);
   };
 
+  const swipeHandlers = useSwipeCarousel({
+    itemCount: slides.length,
+    onNext: nextSlide,
+    onPrevious: previousSlide,
+  });
+
+  if (!activeSlide) {
+    return null;
+  }
+
   return (
     <section className="bg-background">
-      <article className="relative h-[100svh] min-h-[100svh] w-full overflow-hidden bg-surface md:h-[78svh] md:min-h-[520px] md:max-h-[820px] lg:h-[82svh]">
+      <article
+        {...swipeHandlers}
+        className="relative h-[100svh] min-h-[100svh] w-full touch-pan-y select-none overflow-hidden bg-surface md:h-[78svh] md:min-h-[520px] md:max-h-[820px] lg:h-[82svh]"
+      >
         <Link href={activeSlide.href} className="group block h-full">
           <OptimizedImage
             key={activeSlide.id}

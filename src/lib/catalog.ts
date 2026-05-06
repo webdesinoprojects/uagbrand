@@ -208,6 +208,19 @@ const homePageData = {
       },
     },
     {
+      name: "Go Boult",
+      slug: "go-boult",
+      href: "/products?brand=go-boult",
+      deal: "Audio picks",
+      logo: {
+        src: "/assets/brand-logos/go-boult-logo.svg",
+        alt: "Go Boult logo",
+        width: 220,
+        height: 96,
+        label: "go-boult-logo.svg",
+      },
+    },
+    {
       name: "Boult Audio",
       slug: "boult-audio",
       href: "/products?brand=boult-audio",

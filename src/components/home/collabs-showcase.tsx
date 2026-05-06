@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 
 import { OptimizedImage } from "@/components/ui/optimized-image";
 import { SectionHeader } from "@/components/ui/section-header";
+import { useSwipeCarousel } from "@/hooks/use-swipe-carousel";
 import { cn } from "@/lib/utils";
 import type { Brand, CollabSlide } from "@/types";
 
@@ -31,10 +32,6 @@ export function CollabsShowcase({ slides, brands }: CollabsShowcaseProps) {
     return () => window.clearInterval(timer);
   }, [isPlaying, slides.length]);
 
-  if (!activeSlide) {
-    return null;
-  }
-
   const nextSlide = () => {
     setActiveIndex((current) => (current + 1) % slides.length);
   };
@@ -42,6 +39,16 @@ export function CollabsShowcase({ slides, brands }: CollabsShowcaseProps) {
   const previousSlide = () => {
     setActiveIndex((current) => (current - 1 + slides.length) % slides.length);
   };
+
+  const swipeHandlers = useSwipeCarousel({
+    itemCount: slides.length,
+    onNext: nextSlide,
+    onPrevious: previousSlide,
+  });
+
+  if (!activeSlide) {
+    return null;
+  }
 
   return (
     <section className="soft-enter bg-background py-10">
@@ -54,7 +61,10 @@ export function CollabsShowcase({ slides, brands }: CollabsShowcaseProps) {
           />
         </div>
 
-        <article className="relative h-[430px] overflow-hidden border-y border-border bg-surface shadow-[var(--shadow-soft)] sm:h-[560px] sm:rounded-lg sm:border">
+        <article
+          {...swipeHandlers}
+          className="relative h-[430px] touch-pan-y select-none overflow-hidden border-y border-border bg-surface shadow-[var(--shadow-soft)] sm:h-[560px] sm:rounded-lg sm:border"
+        >
           <Link href={activeSlide.href} className="group block h-full">
             <OptimizedImage
               key={activeSlide.id}
@@ -133,7 +143,7 @@ export function CollabsShowcase({ slides, brands }: CollabsShowcaseProps) {
         </article>
 
         <div className="mx-auto mt-4 flex max-w-7xl gap-2 overflow-x-auto px-4 pb-1 sm:px-0 no-scrollbar">
-          {brands.slice(0, 12).map((brand) => (
+          {brands.map((brand) => (
             <Link
               key={brand.slug}
               href={brand.href}
