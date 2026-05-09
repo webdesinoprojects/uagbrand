@@ -12,11 +12,9 @@ import {
   BrandProductCarousel,
   type BrandProductCarouselSlide,
 } from "@/components/products/brand-product-carousel";
-import {
-  ProductAvailabilityGrid,
-  type ProductAvailabilityItem,
-} from "@/components/products/out-of-stock-grid";
+import { ProductGrid } from "@/components/products/product-grid";
 import { getHomePageData } from "@/lib/catalog";
+import { getFilteredProducts } from "@/lib/products";
 import { toTitleCase } from "@/lib/utils";
 import type { Brand, Category } from "@/types";
 
@@ -56,30 +54,17 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
   const selectedCategory = data.categories.find(
     (category) => category.slug === params.category,
   );
-  const selectedBrandIsOut = selectedBrand
-    ? isOutOfStockBrand(selectedBrand)
-    : false;
+  const products = getFilteredProducts(params);
   const listingTitle =
-    selectedBrand && selectedBrandIsOut && selectedCategory
-      ? `${selectedBrand.name} ${selectedCategory.shortName} is out of stock`
-      : selectedBrand && selectedBrandIsOut
-        ? `${selectedBrand.name} products are out of stock`
-        : selectedCategory
-          ? `Shop ${selectedCategory.shortName}`
-          : selectedBrand
-            ? `Shop ${selectedBrand.name}`
-            : "Shop products";
-  const listingDescription = selectedBrandIsOut
-    ? "This brand is currently unavailable. Other brands will show normal product loading cards."
-    : selectedCategory
-      ? "Only unavailable brands are marked out of stock. Other brand cards stay in the normal loading state."
-      : "Product cards are being prepared. Unavailable brands are marked out of stock.";
-  const productItems = getProductAvailabilityItems({
-    brand: selectedBrand,
-    category: selectedCategory,
-    brands: data.brands,
-    categories: data.categories,
-  });
+    selectedBrand && selectedCategory
+      ? `${selectedBrand.name} ${selectedCategory.shortName}`
+      : selectedCategory
+        ? `Shop ${selectedCategory.shortName}`
+        : selectedBrand
+          ? `Shop ${selectedBrand.name}`
+          : "Shop products";
+  const listingDescription =
+    "Product cards now link to individual detail pages with offers, media and specifications.";
   const carouselSlides = getBrandProductCarouselSlides({
     brand: selectedBrand,
     category: selectedCategory,
@@ -130,7 +115,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
           </section>
         )}
 
-        <ProductAvailabilityGrid items={productItems} />
+        <ProductGrid products={products} />
 
         <Link
           href="/"
@@ -142,72 +127,6 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
       <SiteFooter brands={data.brands} categories={data.categories} />
       <MobileBottomNav brands={data.brands} categories={data.categories} />
     </div>
-  );
-}
-
-function getProductAvailabilityItems({
-  brand,
-  category,
-  brands,
-  categories,
-}: {
-  brand: Brand | undefined;
-  category: Category | undefined;
-  brands: Brand[];
-  categories: Category[];
-}): ProductAvailabilityItem[] {
-  const makeItem = ({
-    itemBrand,
-    itemCategory,
-  }: {
-    itemBrand: Brand;
-    itemCategory: Category;
-  }): ProductAvailabilityItem => {
-    const outOfStock = isOutOfStockBrand(itemBrand);
-
-    return {
-      id: `${itemBrand.slug}-${itemCategory.slug}`,
-      title: `${itemBrand.name} ${itemCategory.shortName}`,
-      description: outOfStock
-        ? "This brand is currently out of stock."
-        : "Product card is loading.",
-      image: outOfStock ? itemCategory.image : itemBrand.logo,
-      status: outOfStock ? "out-of-stock" : "loading",
-    };
-  };
-
-  if (brand && category) {
-    return [category, ...categories.filter((item) => item.slug !== category.slug)]
-      .slice(0, 4)
-      .map((item) => makeItem({ itemBrand: brand, itemCategory: item }));
-  }
-
-  if (category) {
-    return getDisplayBrands(brands).map((item) =>
-      makeItem({ itemBrand: item, itemCategory: category }),
-    );
-  }
-
-  if (brand) {
-    return categories.slice(0, 8).map((item) => ({
-      id: `${brand.slug}-${item.slug}`,
-      title: `${brand.name} ${item.shortName}`,
-      description: isOutOfStockBrand(brand)
-        ? "This brand is currently out of stock."
-        : "Product card is loading.",
-      image: isOutOfStockBrand(brand) ? item.image : brand.logo,
-      status: isOutOfStockBrand(brand) ? "out-of-stock" : "loading",
-    }));
-  }
-
-  const fallbackCategory = categories[0];
-
-  if (!fallbackCategory) {
-    return [];
-  }
-
-  return getDisplayBrands(brands).map((item) =>
-    makeItem({ itemBrand: item, itemCategory: fallbackCategory }),
   );
 }
 

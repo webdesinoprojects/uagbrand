@@ -13,45 +13,45 @@ type HeroSliderProps = {
   slides: HeroSlide[];
 };
 
+const AUTO_SLIDE_DELAY_MS = 7000;
+
 export function HeroSlider({ slides }: HeroSliderProps) {
   const [activeIndex, setActiveIndex] = useState(0);
-  const [isMobile, setIsMobile] = useState(false);
   const activeSlide = slides[activeIndex] ?? slides[0];
 
+  const nextSlide = () => {
+    if (slides.length < 2) {
+      return;
+    }
+
+    setActiveIndex((current) => (current + 1) % slides.length);
+  };
+
+  const previousSlide = () => {
+    if (slides.length < 2) {
+      return;
+    }
+
+    setActiveIndex((current) => (current - 1 + slides.length) % slides.length);
+  };
+
   useEffect(() => {
-    const query = window.matchMedia("(max-width: 767px)");
-    const updateMobileState = () => setIsMobile(query.matches);
-
-    updateMobileState();
-    query.addEventListener("change", updateMobileState);
-
-    return () => query.removeEventListener("change", updateMobileState);
-  }, []);
-
-  useEffect(() => {
-    if (!isMobile || slides.length < 2) {
+    if (slides.length < 2) {
       return;
     }
 
     const timer = window.setInterval(() => {
       setActiveIndex((current) => (current + 1) % slides.length);
-    }, 4500);
+    }, AUTO_SLIDE_DELAY_MS);
 
     return () => window.clearInterval(timer);
-  }, [isMobile, slides.length]);
-
-  const nextSlide = () => {
-    setActiveIndex((current) => (current + 1) % slides.length);
-  };
-
-  const previousSlide = () => {
-    setActiveIndex((current) => (current - 1 + slides.length) % slides.length);
-  };
+  }, [slides.length]);
 
   const swipeHandlers = useSwipeCarousel({
     itemCount: slides.length,
     onNext: nextSlide,
     onPrevious: previousSlide,
+    threshold: 34,
   });
 
   if (!activeSlide) {
@@ -66,7 +66,6 @@ export function HeroSlider({ slides }: HeroSliderProps) {
       >
         <Link href={activeSlide.href} className="group block h-full">
           <OptimizedImage
-            key={activeSlide.id}
             src={activeSlide.image.src}
             alt={activeSlide.image.alt}
             width={activeSlide.image.width}
@@ -105,7 +104,8 @@ export function HeroSlider({ slides }: HeroSliderProps) {
               type="button"
               aria-label="Previous hero slide"
               onClick={previousSlide}
-              className="absolute left-5 top-1/2 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-md bg-white/78 text-slate-950 shadow-lg backdrop-blur transition hover:bg-white md:left-3 lg:left-5 lg:h-12 lg:w-12"
+              onPointerDown={(event) => event.stopPropagation()}
+              className="absolute left-5 top-1/2 z-20 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-md bg-white/78 text-slate-950 shadow-lg backdrop-blur transition hover:bg-white md:left-3 lg:left-5 lg:h-12 lg:w-12"
             >
               <ArrowLeft size={21} />
             </button>
@@ -113,12 +113,13 @@ export function HeroSlider({ slides }: HeroSliderProps) {
               type="button"
               aria-label="Next hero slide"
               onClick={nextSlide}
-              className="absolute right-5 top-1/2 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-md bg-white/78 text-slate-950 shadow-lg backdrop-blur transition hover:bg-white md:right-3 lg:right-5 lg:h-12 lg:w-12"
+              onPointerDown={(event) => event.stopPropagation()}
+              className="absolute right-5 top-1/2 z-20 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-md bg-white/78 text-slate-950 shadow-lg backdrop-blur transition hover:bg-white md:right-3 lg:right-5 lg:h-12 lg:w-12"
             >
               <ArrowRight size={21} />
             </button>
 
-            <div className="absolute inset-x-0 bottom-7 flex items-center justify-center gap-3 px-5">
+            <div className="absolute inset-x-0 bottom-7 z-20 flex items-center justify-center gap-3 px-5">
               <span className="rounded-md bg-black/38 px-2 py-1 font-mono text-xs font-bold text-white backdrop-blur">
                 {String(activeIndex + 1).padStart(2, "0")} /{" "}
                 {String(slides.length).padStart(2, "0")}
@@ -130,6 +131,7 @@ export function HeroSlider({ slides }: HeroSliderProps) {
                     type="button"
                     aria-label={`Show ${slide.title}`}
                     onClick={() => setActiveIndex(index)}
+                    onPointerDown={(event) => event.stopPropagation()}
                     className={cn(
                       "h-1.5 shrink-0 rounded-full transition-all",
                       index === activeIndex

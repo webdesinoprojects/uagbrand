@@ -89,7 +89,8 @@ export function BrandProductCarousel({ slides }: BrandProductCarouselProps) {
             type="button"
             aria-label="Previous carousel item"
             onClick={previousSlide}
-            className="absolute left-3 top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-md bg-white/82 text-slate-950 shadow-lg backdrop-blur transition hover:bg-white"
+            onPointerDown={(event) => event.stopPropagation()}
+            className="absolute left-3 top-1/2 z-20 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-md bg-white/82 text-slate-950 shadow-lg backdrop-blur transition hover:bg-white"
           >
             <ArrowLeft size={18} />
           </button>
@@ -97,18 +98,20 @@ export function BrandProductCarousel({ slides }: BrandProductCarouselProps) {
             type="button"
             aria-label="Next carousel item"
             onClick={nextSlide}
-            className="absolute right-3 top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-md bg-white/82 text-slate-950 shadow-lg backdrop-blur transition hover:bg-white"
+            onPointerDown={(event) => event.stopPropagation()}
+            className="absolute right-3 top-1/2 z-20 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-md bg-white/82 text-slate-950 shadow-lg backdrop-blur transition hover:bg-white"
           >
             <ArrowRight size={18} />
           </button>
 
-          <div className="absolute inset-x-0 bottom-3 flex justify-center gap-1.5">
+          <div className="absolute inset-x-0 bottom-3 z-20 flex justify-center gap-1.5">
             {slides.map((slide, index) => (
               <button
                 key={slide.id}
                 type="button"
                 aria-label={`Show ${slide.title}`}
                 onClick={() => setActiveIndex(index)}
+                onPointerDown={(event) => event.stopPropagation()}
                 className={cn(
                   "h-1.5 rounded-full transition-all",
                   index === activeIndex

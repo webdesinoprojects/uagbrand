@@ -92,7 +92,8 @@ export function WarehouseCarousel({ slides }: WarehouseCarouselProps) {
             type="button"
             aria-label="Previous warehouse slide"
             onClick={previousSlide}
-            className="absolute left-4 top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-lg bg-white/78 text-slate-950 shadow-lg backdrop-blur transition hover:bg-white"
+            onPointerDown={(event) => event.stopPropagation()}
+            className="absolute left-4 top-1/2 z-20 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-lg bg-white/78 text-slate-950 shadow-lg backdrop-blur transition hover:bg-white"
           >
             <ArrowLeft aria-hidden="true" size={20} />
           </button>
@@ -100,12 +101,13 @@ export function WarehouseCarousel({ slides }: WarehouseCarouselProps) {
             type="button"
             aria-label="Next warehouse slide"
             onClick={nextSlide}
-            className="absolute right-4 top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-lg bg-white/78 text-slate-950 shadow-lg backdrop-blur transition hover:bg-white"
+            onPointerDown={(event) => event.stopPropagation()}
+            className="absolute right-4 top-1/2 z-20 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-lg bg-white/78 text-slate-950 shadow-lg backdrop-blur transition hover:bg-white"
           >
             <ArrowRight aria-hidden="true" size={20} />
           </button>
 
-          <div className="absolute inset-x-0 bottom-5 flex items-center justify-center gap-3 px-5">
+          <div className="absolute inset-x-0 bottom-5 z-20 flex items-center justify-center gap-3 px-5">
             <span className="rounded-md bg-black/42 px-2 py-1 font-mono text-xs font-bold text-white backdrop-blur">
               {String(activeIndex + 1).padStart(2, "0")} /{" "}
               {String(slides.length).padStart(2, "0")}
@@ -117,6 +119,7 @@ export function WarehouseCarousel({ slides }: WarehouseCarouselProps) {
                   type="button"
                   aria-label={`Show ${slide.title}`}
                   onClick={() => setActiveIndex(index)}
+                  onPointerDown={(event) => event.stopPropagation()}
                   className={cn(
                     "h-1.5 rounded-full transition-all",
                     index === activeIndex
@@ -134,6 +137,7 @@ export function WarehouseCarousel({ slides }: WarehouseCarouselProps) {
                   : "Play warehouse carousel"
               }
               onClick={() => setIsPlaying((value) => !value)}
+              onPointerDown={(event) => event.stopPropagation()}
               className="grid h-9 w-9 place-items-center rounded-lg bg-black/42 text-white backdrop-blur transition hover:bg-black/62"
             >
               {isPlaying ? (

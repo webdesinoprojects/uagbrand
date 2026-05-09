@@ -54,6 +54,62 @@ export type QuickMenuItem = {
   icon: QuickMenuIcon;
 };
 
+export type FeaturedDeal = {
+  id: string;
+  badge: string;
+  feature: string;
+  title: string;
+  price: string;
+  compareAt: string;
+  discount: string;
+  href: string;
+  image: ImageAsset;
+};
+
+export type ProductColorOption = {
+  name: string;
+  swatch: string;
+  available: boolean;
+};
+
+export type ProductOffer = {
+  label: string;
+  title: string;
+  value: string;
+  code: string;
+};
+
+export type ProductSpecification = {
+  label: string;
+  value: string;
+};
+
+export type Product = {
+  slug: string;
+  title: string;
+  brandSlug: string;
+  categorySlug: string;
+  badge: string;
+  feature: string;
+  tagline: string;
+  description: string;
+  price: string;
+  compareAt: string;
+  discount: string;
+  rating: string;
+  ratingCount: string;
+  availability: "in-stock" | "out-of-stock";
+  selectedColor: string;
+  colors: ProductColorOption[];
+  deliveryPincode: string;
+  deliveryPromise: string;
+  usersLove: string;
+  rewardText: string;
+  activeOffers: ProductOffer[];
+  images: ImageAsset[];
+  specifications: ProductSpecification[];
+};
+
 export type TrustItem = {
   title: string;
   description: string;
@@ -78,6 +134,7 @@ export type VideoFeature = {
 export type HomePageData = {
   heroSlides: HeroSlide[];
   quickMenus: QuickMenuItem[];
+  featuredDeals: FeaturedDeal[];
   brands: Brand[];
   categories: Category[];
   collabSlides: CollabSlide[];
