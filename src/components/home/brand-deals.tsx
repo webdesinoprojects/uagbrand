@@ -8,30 +8,13 @@ type BrandDealsProps = {
   brands: Brand[];
 };
 
-const dealBrandSlugs = new Set([
-  "oneplus",
-  "boat",
-  "redmi",
-  "realme",
-  "noise",
-  "ptron",
-  "ubon",
-  "go-boult",
-  "boult-audio",
-  "jbl",
-  "zebronics",
-  "sony",
-]);
-
 export function BrandDeals({ brands }: BrandDealsProps) {
-  const dealBrands = brands.filter((brand) => dealBrandSlugs.has(brand.slug));
-
   return (
     <section id="brands" className="soft-enter bg-background py-8 sm:py-10">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <SectionHeader title="Only Deals In Brands" />
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-          {dealBrands.map((brand) => (
+          {brands.map((brand) => (
             <Link
               key={brand.slug}
               href={brand.href}

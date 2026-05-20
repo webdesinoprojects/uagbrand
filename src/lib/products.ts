@@ -1,6 +1,6 @@
 import type { ImageAsset, Product, ProductSpecification } from "@/types";
 
-type ProductFilter = {
+export type ProductFilter = {
   brand?: string;
   category?: string;
   q?: string;

@@ -8,15 +8,29 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
-    "check": "npm run lint && npm run typecheck && npm run build"
+    "check": "npm run lint && npm run typecheck && npm run build",
+    "supabase:start": "supabase start",
+    "supabase:stop": "supabase stop",
+    "supabase:status": "supabase status",
+    "db:push": "supabase db push",
+    "db:reset": "supabase db reset",
+    "db:migration:new": "supabase migration new",
+    "db:types": "supabase gen types typescript --local > src/types/supabase.ts",
+    "admin:seed": "node scripts/seed-admin.mjs",
+    "demo:seed": "node scripts/seed-demo-catalog.mjs"
   },
   "dependencies": {
     "@fontsource-variable/manrope": "^5.2.8",
     "@fontsource-variable/space-grotesk": "^5.2.10",
+    "@imagekit/next": "^2.1.5",
+    "@supabase/ssr": "^0.10.3",
+    "@supabase/supabase-js": "^2.105.4",
     "lucide-react": "^1.14.0",
     "next": "^16.2.4",
     "react": "^19.2.5",
-    "react-dom": "^19.2.5"
+    "react-dom": "^19.2.5",
+    "server-only": "^0.0.1",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.2.4",
@@ -26,6 +40,7 @@
     "babel-plugin-react-compiler": "^1.0.0",
     "eslint": "^9.39.4",
     "eslint-config-next": "^16.2.4",
+    "supabase": "^2.98.2",
     "tailwindcss": "^4.2.4",
     "typescript": "^6.0.3"
   },

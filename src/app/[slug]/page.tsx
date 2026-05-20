@@ -28,8 +28,7 @@ import Link from "next/link";
 import { Breadcrumbs } from "@/components/navigation/breadcrumbs";
 import { MobileBottomNav } from "@/components/layout/mobile-bottom-nav";
 import { SiteFooter } from "@/components/layout/site-footer";
-import { SiteHeader } from "@/components/layout/site-header";
-import { getHomePageData } from "@/lib/catalog";
+import { SiteHeaderWithSettings } from "@/components/layout/site-header-with-settings";
 import {
   staticPages,
   type StaticPageCard,
@@ -37,6 +36,8 @@ import {
   type StaticPageIcon,
   type StaticPageSection,
 } from "@/lib/static-pages";
+import { getHomePageDTO } from "@/server/public/home-dal";
+import { getPublicStaticPage } from "@/server/public/pages-dal";
 
 const iconMap = {
   badge: BadgeCheck,
@@ -72,35 +73,35 @@ export async function generateMetadata({
   params,
 }: StaticPageProps): Promise<Metadata> {
   const { slug } = await params;
-  const page = staticPages[
-    slug as keyof typeof staticPages
-  ] as StaticPageContent | undefined;
+  const result = await getPublicStaticPage(slug);
 
-  if (!page) {
+  if (!result) {
     return {};
   }
 
   return {
-    title: page.title,
-    description: page.description,
+    title: result.page.title,
+    description: result.page.description,
   };
 }
 
 export default async function StaticPage({ params }: StaticPageProps) {
   const { slug } = await params;
-  const page = staticPages[
-    slug as keyof typeof staticPages
-  ] as StaticPageContent | undefined;
+  const result = await getPublicStaticPage(slug);
 
-  if (!page) {
+  if (!result) {
     notFound();
   }
 
-  const data = await getHomePageData();
+  const page = result.page;
+
+  // DB-aware composer with static fallback so admin-managed brands/categories
+  // appear in the header/footer here too.
+  const data = await getHomePageDTO();
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <SiteHeader brands={data.brands} categories={data.categories} />
+      <SiteHeaderWithSettings brands={data.brands} categories={data.categories} />
       <main>
         <PageHero page={page} />
         <StatsGrid cards={page.stats} />

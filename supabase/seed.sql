@@ -1,0 +1,4 @@
+-- Local development seed file.
+-- Phase 1 will add schema migrations first, then this file will receive safe
+-- demo records for brands, categories, homepage CMS, products, admin users,
+-- and inventory.

@@ -3,6 +3,10 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { OptimizedImage } from "@/components/ui/optimized-image";
+import {
+  getPublicFooterColumns,
+  getPublicSiteSettings,
+} from "@/server/public/site-chrome-dal";
 import type { Brand, Category } from "@/types";
 
 type SiteFooterProps = {
@@ -10,21 +14,13 @@ type SiteFooterProps = {
   categories: Category[];
 };
 
-export function SiteFooter({ brands, categories }: SiteFooterProps) {
-  const supportLinks = [
-    { href: "/about", label: "About us" },
-    { href: "/support", label: "Support center" },
-    { href: "/contact", label: "Contact us" },
-    { href: "/track-order", label: "Track my order" },
-    { href: "/faq", label: "FAQ" },
-  ];
-  const policyLinks = [
-    { href: "/return-policy", label: "Return / refund policy" },
-    { href: "/shipping-policy", label: "Shipping policy" },
-    { href: "/privacy-policy", label: "Privacy policy" },
-    { href: "/terms-and-conditions", label: "Terms and conditions" },
-    { href: "/blogs", label: "Blogs" },
-  ];
+export async function SiteFooter({ brands, categories }: SiteFooterProps) {
+  // Footer columns/links come from Supabase when published rows exist;
+  // otherwise the DAL returns the original Support / Policy static set.
+  const [{ columns: cmsColumns }, settings] = await Promise.all([
+    getPublicFooterColumns(),
+    getPublicSiteSettings(),
+  ]);
 
   return (
     <footer className="border-t border-border bg-surface pb-20 lg:pb-0">
@@ -32,29 +28,34 @@ export function SiteFooter({ brands, categories }: SiteFooterProps) {
         <div>
           <Link href="/" className="inline-flex items-center gap-3 font-black">
             <OptimizedImage
-              src="/assets/logos/allearbuds-logo.svg"
-              alt="AllEarbuds logo"
-              width={320}
-              height={120}
+              src={settings.logo?.thumbnailUrl ?? settings.logo?.url ?? "/assets/logos/allearbuds-logo.svg"}
+              alt={settings.logo?.altText ?? `${settings.siteName} logo`}
+              width={settings.logo?.width ?? 320}
+              height={settings.logo?.height ?? 120}
               sizes="160px"
               wrapperClassName="h-12 w-32 rounded-md bg-brand"
               className="h-full w-full object-contain"
             />
           </Link>
           <p className="mt-4 max-w-sm text-sm leading-6 text-muted">
-            AllEarbuds is structured as a fast ecommerce storefront for audio,
-            wearables, charging products and daily mobile accessories.
+            {settings.footerDescription}
           </p>
           <div className="mt-5 grid gap-3 text-sm text-muted">
-            <ContactLine icon={<Mail size={17} />}>
-              support@allearbuds.com
-            </ContactLine>
-            <ContactLine icon={<Phone size={17} />}>
-              +91 00000 00000
-            </ContactLine>
-            <ContactLine icon={<MapPin size={17} />}>
-              India dispatch center
-            </ContactLine>
+            {settings.contactEmail ? (
+              <ContactLine icon={<Mail size={17} />}>
+                {settings.contactEmail}
+              </ContactLine>
+            ) : null}
+            {settings.contactPhone ? (
+              <ContactLine icon={<Phone size={17} />}>
+                {settings.contactPhone}
+              </ContactLine>
+            ) : null}
+            {settings.addressLabel ? (
+              <ContactLine icon={<MapPin size={17} />}>
+                {settings.addressLabel}
+              </ContactLine>
+            ) : null}
           </div>
         </div>
 
@@ -76,21 +77,15 @@ export function SiteFooter({ brands, categories }: SiteFooterProps) {
 
         <div>
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-1">
-            <FooterColumn title="Support">
-              {supportLinks.map((link) => (
-                <FooterLink key={link.href} href={link.href}>
-                  {link.label}
-                </FooterLink>
-              ))}
-            </FooterColumn>
-
-            <FooterColumn title="Policy">
-              {policyLinks.map((link) => (
-                <FooterLink key={link.href} href={link.href}>
-                  {link.label}
-                </FooterLink>
-              ))}
-            </FooterColumn>
+            {cmsColumns.map((column) => (
+              <FooterColumn key={column.id} title={column.title}>
+                {column.links.map((link) => (
+                  <FooterLink key={link.id} href={link.href}>
+                    {link.label}
+                  </FooterLink>
+                ))}
+              </FooterColumn>
+            ))}
           </div>
 
           <div className="mt-6">

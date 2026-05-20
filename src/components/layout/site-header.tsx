@@ -4,9 +4,7 @@ import {
   ChevronRight,
   Menu,
   Search,
-  ShoppingCart,
   SlidersHorizontal,
-  UserRound,
   X,
 } from "lucide-react";
 import Link from "next/link";
@@ -15,26 +13,33 @@ import { useEffect, useState } from "react";
 
 import { cn } from "@/lib/utils";
 import type { Brand, Category } from "@/types";
+import { HeaderAccountLink } from "@/components/layout/header-account-link";
+import { HeaderCartLink } from "@/components/layout/header-cart-link";
+import { OptimizedImage } from "@/components/ui/optimized-image";
+import type { AdminMediaReference } from "@/types/api";
 
 type SiteHeaderProps = {
   brands: Brand[];
   categories: Category[];
+  siteName?: string;
+  logo?: AdminMediaReference | null;
+  navLinks?: Array<{ id: string; label: string; href: string }>;
   variant?: "solid" | "overlay";
-  isLoggedIn?: boolean;
 };
 
 export function SiteHeader({
   brands,
   categories,
+  siteName = "ALLEARBUDS.COM",
+  logo = null,
+  navLinks = [],
   variant = "solid",
-  isLoggedIn = false,
 }: SiteHeaderProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [filterOpen, setFilterOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [hasScrolled, setHasScrolled] = useState(false);
   const isOverlay = variant === "overlay";
-  const accountLabel = isLoggedIn ? "Account" : "Login / Register";
 
   useEffect(() => {
     if (!isOverlay) {
@@ -101,13 +106,25 @@ export function SiteHeader({
 
           <Link
             href="/"
-            aria-label="AllEarbuds home"
+            aria-label={`${siteName} home`}
             className={cn(
               "min-w-0 justify-self-center truncate px-2 text-center font-display text-[11px] font-black uppercase tracking-normal sm:text-sm lg:text-base",
               "text-white",
             )}
           >
-            ALLEARBUDS.COM
+            {logo ? (
+              <OptimizedImage
+                src={logo.thumbnailUrl ?? logo.url}
+                alt={logo.altText ?? `${siteName} logo`}
+                width={logo.width ?? 240}
+                height={logo.height ?? 80}
+                sizes="140px"
+                wrapperClassName="h-8 w-32 bg-transparent"
+                className="h-full w-full object-contain"
+              />
+            ) : (
+              siteName
+            )}
           </Link>
 
           <div className="flex min-w-0 items-center justify-end gap-1.5 sm:gap-2">
@@ -145,34 +162,15 @@ export function SiteHeader({
               <Search size={17} />
             </button>
 
-            <Link
-              href="/account"
-              title={accountLabel}
-              aria-label={accountLabel}
-              className={cn(
-                "flex h-9 shrink-0 items-center justify-center gap-2 rounded-md px-2 text-xs font-extrabold transition sm:h-10 sm:px-3",
+            <HeaderAccountLink
+              className={
                 isOverlay && !hasScrolled
                   ? "bg-transparent text-white hover:bg-white/10"
-                  : "bg-black/16 text-white backdrop-blur-sm hover:bg-white/14",
-              )}
-            >
-              <UserRound size={16} />
-              <span className="hidden whitespace-nowrap lg:inline">
-                {accountLabel}
-              </span>
-            </Link>
+                  : "bg-black/16 text-white backdrop-blur-sm hover:bg-white/14"
+              }
+            />
 
-            <Link
-              href="/cart"
-              title="Cart"
-              aria-label="Cart"
-              className={cn("relative", iconButtonClassName)}
-            >
-              <ShoppingCart size={17} />
-              <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-md bg-accent px-1 text-[11px] font-black text-slate-950">
-                0
-              </span>
-            </Link>
+            <HeaderCartLink className={iconButtonClassName} />
           </div>
         </div>
 
@@ -213,6 +211,9 @@ export function SiteHeader({
         onClose={() => setMenuOpen(false)}
         categories={categories}
         brands={brands}
+        siteName={siteName}
+        logo={logo}
+        navLinks={navLinks}
       />
       <FilterDrawer
         open={filterOpen}
@@ -229,11 +230,17 @@ function MenuDrawer({
   onClose,
   categories,
   brands,
+  siteName,
+  logo,
+  navLinks,
 }: {
   open: boolean;
   onClose: () => void;
   categories: Category[];
   brands: Brand[];
+  siteName: string;
+  logo: AdminMediaReference | null;
+  navLinks: Array<{ id: string; label: string; href: string }>;
 }) {
   if (!open) {
     return null;
@@ -251,7 +258,19 @@ function MenuDrawer({
         <div className="flex items-center justify-between border-b border-border px-5 py-4">
           <div className="flex items-center gap-3">
             <span className="grid h-11 w-11 place-items-center rounded-lg bg-brand text-sm font-black text-white">
-              AE
+              {logo ? (
+                <OptimizedImage
+                  src={logo.thumbnailUrl ?? logo.url}
+                  alt={logo.altText ?? `${siteName} logo`}
+                  width={logo.width ?? 96}
+                  height={logo.height ?? 96}
+                  sizes="44px"
+                  wrapperClassName="h-full w-full rounded-lg bg-white/12"
+                  className="h-full w-full object-contain p-1"
+                />
+              ) : (
+                siteName.slice(0, 2).toUpperCase()
+              )}
             </span>
             <div>
               <p className="text-xs font-extrabold uppercase text-brand">
@@ -271,6 +290,16 @@ function MenuDrawer({
         </div>
 
         <div className="flex-1 overflow-y-auto px-5 py-5 no-scrollbar">
+          {navLinks.length > 0 ? (
+            <DrawerGroup title="Quick links">
+              {navLinks.map((item) => (
+                <DrawerLink key={item.id} href={item.href} onClose={onClose}>
+                  {item.label}
+                </DrawerLink>
+              ))}
+            </DrawerGroup>
+          ) : null}
+
           <DrawerGroup title="Shop by category">
             {categories.map((category) => (
               <DrawerLink

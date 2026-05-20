@@ -5,7 +5,6 @@ import {
   Home,
   Menu,
   PackageSearch,
-  ShoppingCart,
   Store,
   Tags,
   UserRound,
@@ -16,6 +15,7 @@ import type { ReactNode } from "react";
 import { useState } from "react";
 
 import type { Brand, Category } from "@/types";
+import { MobileCartLink } from "@/components/layout/mobile-cart-link";
 
 type MobileBottomNavProps = {
   brands: Brand[];
@@ -129,11 +129,7 @@ export function MobileBottomNav({ brands, categories }: MobileBottomNavProps) {
       <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/96 px-2 py-1.5 shadow-2xl backdrop-blur lg:hidden">
         <div className="mx-auto grid max-w-md grid-cols-4 gap-1">
           <MobileNavLink href="/" icon={<Home size={19} />} label="Home" />
-          <MobileNavLink
-            href="/cart"
-            icon={<ShoppingCart size={19} />}
-            label="Cart"
-          />
+          <MobileCartLink />
           <button
             type="button"
             aria-expanded={accountOpen}

@@ -15,6 +15,7 @@ export type BrandProductCarouselSlide = {
   description: string;
   href: string;
   image: ImageAsset;
+  videoSrc?: string;
 };
 
 type BrandProductCarouselProps = {
@@ -54,16 +55,30 @@ export function BrandProductCarousel({ slides }: BrandProductCarouselProps) {
       <Link href={activeSlide.href} className="group block">
         <div className="relative h-[230px] overflow-hidden bg-slate-950 sm:h-[300px]">
           <div className="absolute inset-y-0 right-0 w-[58%] bg-[radial-gradient(circle_at_70%_35%,rgba(245,196,0,0.28),transparent_34%),linear-gradient(135deg,rgba(0,120,212,0.16),rgba(15,17,21,0.2))]" />
-          <OptimizedImage
-            key={activeSlide.id}
-            src={activeSlide.image.src}
-            alt={activeSlide.image.alt}
-            width={activeSlide.image.width}
-            height={activeSlide.image.height}
-            sizes="(max-width: 640px) 60vw, 420px"
-            wrapperClassName="absolute bottom-0 right-0 h-[72%] w-[58%]"
-            className="h-full w-full object-contain p-5 transition duration-500 group-hover:scale-105"
-          />
+          {activeSlide.videoSrc ? (
+            <video
+              key={activeSlide.id}
+              autoPlay
+              loop
+              muted
+              playsInline
+              poster={activeSlide.image.src}
+              className="absolute bottom-0 right-0 h-[72%] w-[58%] object-cover opacity-90 transition duration-500 group-hover:scale-105"
+            >
+              <source src={activeSlide.videoSrc} type="video/mp4" />
+            </video>
+          ) : (
+            <OptimizedImage
+              key={activeSlide.id}
+              src={activeSlide.image.src}
+              alt={activeSlide.image.alt}
+              width={activeSlide.image.width}
+              height={activeSlide.image.height}
+              sizes="(max-width: 640px) 60vw, 420px"
+              wrapperClassName="absolute bottom-0 right-0 h-[72%] w-[58%]"
+              className="h-full w-full object-contain p-5 transition duration-500 group-hover:scale-105"
+            />
+          )}
           <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.86)_0%,rgba(0,0,0,0.62)_48%,rgba(0,0,0,0.16)_100%)]" />
           <div className="absolute inset-y-0 left-0 flex max-w-[68%] flex-col justify-center px-5 py-6 text-white sm:px-7">
             <p className="text-xs font-black uppercase text-accent">

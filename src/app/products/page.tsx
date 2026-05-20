@@ -6,15 +6,15 @@ import {
   type BreadcrumbItem,
 } from "@/components/navigation/breadcrumbs";
 import { SiteFooter } from "@/components/layout/site-footer";
-import { SiteHeader } from "@/components/layout/site-header";
+import { SiteHeaderWithSettings } from "@/components/layout/site-header-with-settings";
 import { MobileBottomNav } from "@/components/layout/mobile-bottom-nav";
 import {
   BrandProductCarousel,
   type BrandProductCarouselSlide,
 } from "@/components/products/brand-product-carousel";
 import { ProductGrid } from "@/components/products/product-grid";
-import { getHomePageData } from "@/lib/catalog";
-import { getFilteredProducts } from "@/lib/products";
+import { getHomePageDTO } from "@/server/public/home-dal";
+import { getPublicProducts } from "@/server/public/products-dal";
 import { toTitleCase } from "@/lib/utils";
 import type { Brand, Category } from "@/types";
 
@@ -44,17 +44,23 @@ const OUT_OF_STOCK_BRANDS = new Set([
   "philips",
   "amazon-basics",
 ]);
+const BRAND_CAROUSEL_IMAGE_COUNT = 5;
+const BRAND_CAROUSEL_VIDEO_SRC = "/assets/content/our-product-video.mp4";
 
 export default async function ProductsPage({ searchParams }: ProductsPageProps) {
   const params = await searchParams;
-  const data = await getHomePageData();
+  // Reads brands/categories from Supabase via the home composer with static
+  // fallback, so DB-only brands/categories surface in header/footer/carousels.
+  const data = await getHomePageDTO();
 
   const activeFilters = Object.entries(params).filter(([, value]) => value);
   const selectedBrand = data.brands.find((brand) => brand.slug === params.brand);
   const selectedCategory = data.categories.find(
     (category) => category.slug === params.category,
   );
-  const products = getFilteredProducts(params);
+  // Reads from Supabase when seeded; falls back to static products until then.
+  // Page-size cap matches the existing static listing layout.
+  const { items: products } = await getPublicProducts({ ...params, pageSize: 100 });
   const listingTitle =
     selectedBrand && selectedCategory
       ? `${selectedBrand.name} ${selectedCategory.shortName}`
@@ -74,7 +80,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <SiteHeader brands={data.brands} categories={data.categories} />
+      <SiteHeaderWithSettings brands={data.brands} categories={data.categories} />
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <Breadcrumbs
           items={getProductBreadcrumbs({
@@ -142,11 +148,11 @@ function getBrandProductCarouselSlides({
   categories: Category[];
 }): BrandProductCarouselSlide[] {
   if (brand) {
-    return [
+    const imageSlides = [
       ...(category ? [category] : []),
       ...categories.filter((item) => item.slug !== category?.slug),
     ]
-      .slice(0, 3)
+      .slice(0, BRAND_CAROUSEL_IMAGE_COUNT)
       .map((item) => ({
         id: `brand-carousel-${brand.slug}-${item.slug}`,
         eyebrow: `${brand.name} brand carousel`,
@@ -155,11 +161,25 @@ function getBrandProductCarouselSlides({
         href: `/products?brand=${brand.slug}&category=${item.slug}`,
         image: item.image,
       }));
+
+    return [
+      ...imageSlides,
+      {
+        id: `brand-carousel-${brand.slug}-video`,
+        eyebrow: `${brand.name} brand video`,
+        title: `${brand.name} product reel`,
+        description:
+          "Auto-playing brand video slot for campaign footage and product motion.",
+        href: `/products?brand=${brand.slug}`,
+        image: imageSlides[0]?.image ?? brand.logo,
+        videoSrc: BRAND_CAROUSEL_VIDEO_SRC,
+      },
+    ];
   }
 
   if (category) {
-    return getDisplayBrands(brands)
-      .slice(0, 3)
+    const imageSlides = getDisplayBrands(brands)
+      .slice(0, BRAND_CAROUSEL_IMAGE_COUNT)
       .map((item) => ({
         id: `category-carousel-${category.slug}-${item.slug}`,
         eyebrow: `${category.shortName} brand carousel`,
@@ -168,6 +188,20 @@ function getBrandProductCarouselSlides({
         href: `/products?brand=${item.slug}&category=${category.slug}`,
         image: item.logo,
       }));
+
+    return [
+      ...imageSlides,
+      {
+        id: `category-carousel-${category.slug}-video`,
+        eyebrow: `${category.shortName} brand video`,
+        title: `${category.shortName} product reel`,
+        description:
+          "Auto-playing category video slot for product demos and launches.",
+        href: `/products?category=${category.slug}`,
+        image: imageSlides[0]?.image ?? category.image,
+        videoSrc: BRAND_CAROUSEL_VIDEO_SRC,
+      },
+    ];
   }
 
   return [];

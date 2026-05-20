@@ -1,5 +1,10 @@
 import type { NextConfig } from "next";
 
+const imageKitEndpoint = process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT;
+const imageKitHost = imageKitEndpoint
+  ? new URL(imageKitEndpoint).hostname
+  : undefined;
+
 const nextConfig: NextConfig = {
   cacheComponents: true,
   poweredByHeader: false,
@@ -17,6 +22,15 @@ const nextConfig: NextConfig = {
         search: "",
       },
     ],
+    remotePatterns: imageKitHost
+      ? [
+          {
+            protocol: "https",
+            hostname: imageKitHost,
+            pathname: "/**",
+          },
+        ]
+      : [],
   },
 };
 

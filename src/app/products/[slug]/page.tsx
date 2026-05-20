@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Copy, Heart, PackageCheck, ShoppingCart, Star, Truck } from "lucide-react";
+import { Heart, PackageCheck, Star, Truck } from "lucide-react";
 import { notFound } from "next/navigation";
 
 import {
@@ -8,10 +8,19 @@ import {
 } from "@/components/navigation/breadcrumbs";
 import { MobileBottomNav } from "@/components/layout/mobile-bottom-nav";
 import { SiteFooter } from "@/components/layout/site-footer";
-import { SiteHeader } from "@/components/layout/site-header";
-import { OptimizedImage } from "@/components/ui/optimized-image";
-import { getHomePageData } from "@/lib/catalog";
-import { getProductBySlug, getProducts } from "@/lib/products";
+import { SiteHeaderWithSettings } from "@/components/layout/site-header-with-settings";
+import { ProductActions } from "@/components/products/product-actions";
+import {
+  ProductBentoMediaGrid,
+  ProductMediaGallery,
+} from "@/components/products/product-media-gallery";
+import { SimilarProductsCarousel } from "@/components/products/similar-products-carousel";
+import { getProducts } from "@/lib/products";
+import { getHomePageDTO } from "@/server/public/home-dal";
+import {
+  getPublicProductBySlug,
+  getPublicProducts,
+} from "@/server/public/products-dal";
 import type { Brand, Category, Product } from "@/types";
 
 type ProductPageProps = {
@@ -28,28 +37,39 @@ export async function generateMetadata({
   params,
 }: ProductPageProps): Promise<Metadata> {
   const { slug } = await params;
-  const product = getProductBySlug(slug);
+  const result = await getPublicProductBySlug(slug);
 
-  if (!product) {
+  if (!result) {
     return {
       title: "Product not found",
     };
   }
 
   return {
-    title: product.title,
-    description: product.tagline,
+    title: result.product.title,
+    description: result.product.tagline,
   };
 }
 
 export default async function ProductDetailPage({ params }: ProductPageProps) {
   const { slug } = await params;
-  const product = getProductBySlug(slug);
-  const data = await getHomePageData();
+  const result = await getPublicProductBySlug(slug);
+  // Brand/category lookup uses the DB-aware composer so DB-only brands and
+  // categories resolve correctly instead of falling through to notFound().
+  const data = await getHomePageDTO();
 
-  if (!product) {
+  if (!result) {
     notFound();
   }
+
+  const { product } = result;
+  const similarProductList = await getPublicProducts({
+    brand: product.brandSlug,
+    pageSize: 24,
+  });
+  const similarProducts = similarProductList.items
+    .filter((item) => item.slug !== product.slug)
+    .slice(0, 4);
 
   const brand = data.brands.find((item) => item.slug === product.brandSlug);
   const category = data.categories.find(
@@ -62,7 +82,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <SiteHeader brands={data.brands} categories={data.categories} />
+      <SiteHeaderWithSettings brands={data.brands} categories={data.categories} />
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <Breadcrumbs
           items={getProductBreadcrumbs({
@@ -70,68 +90,20 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
             brand,
             category,
           })}
-        />
+        />  
 
         <section className="grid gap-8 lg:grid-cols-[minmax(0,1.15fr)_minmax(390px,0.85fr)]">
-          <ProductGallery product={product} />
+          <ProductMediaGallery product={product} />
           <ProductSummary product={product} brand={brand} category={category} />
         </section>
 
-        <ProductBentoGrid product={product} />
+        <ProductBentoMediaGrid product={product} />
         <ProductSpecifications product={product} />
+        <SimilarProductsCarousel brand={brand} products={similarProducts} />
       </main>
       <SiteFooter brands={data.brands} categories={data.categories} />
       <MobileBottomNav brands={data.brands} categories={data.categories} />
     </div>
-  );
-}
-
-function ProductGallery({ product }: { product: Product }) {
-  const primaryImage = product.images[0];
-
-  if (!primaryImage) {
-    return null;
-  }
-
-  return (
-    <section className="grid gap-4 sm:grid-cols-[72px_minmax(0,1fr)]">
-      <div className="order-2 flex gap-3 overflow-x-auto pb-1 sm:order-1 sm:block sm:space-y-3 sm:overflow-visible sm:pb-0">
-        {product.images.slice(0, 6).map((image, index) => (
-          <button
-            key={`${image.src}-${index}`}
-            type="button"
-            aria-label={`Preview ${product.title} image ${index + 1}`}
-            className="h-16 w-16 shrink-0 overflow-hidden rounded-lg border border-border bg-surface transition hover:border-brand sm:h-[72px] sm:w-[72px]"
-          >
-            <OptimizedImage
-              src={image.src}
-              alt={image.alt}
-              width={image.width}
-              height={image.height}
-              sizes="72px"
-              wrapperClassName="h-full w-full"
-              className="h-full w-full object-contain p-2"
-            />
-          </button>
-        ))}
-      </div>
-
-      <div className="order-1 relative overflow-hidden rounded-xl bg-surface-soft sm:order-2">
-        <OptimizedImage
-          src={primaryImage.src}
-          alt={primaryImage.alt}
-          width={primaryImage.width}
-          height={primaryImage.height}
-          priority
-          sizes="(max-width: 1024px) 100vw, 58vw"
-          wrapperClassName="aspect-square w-full"
-          className="h-full w-full object-contain p-10 sm:p-14 lg:p-20"
-        />
-        <span className="absolute bottom-4 right-4 rounded-full bg-surface/90 px-3 py-1 text-xs font-bold text-foreground shadow-sm backdrop-blur">
-          View similar
-        </span>
-      </div>
-    </section>
   );
 }
 
@@ -218,8 +190,7 @@ function ProductSummary({
       </section>
 
       <InfoCards product={product} brand={brand} category={category} />
-      <ActiveOffers product={product} />
-      <ActionBar product={product} />
+      <ProductActions product={product} />
     </section>
   );
 }
@@ -301,103 +272,6 @@ function InfoCards({
         flow.
       </div>
     </div>
-  );
-}
-
-function ActiveOffers({ product }: { product: Product }) {
-  return (
-    <section className="mt-7">
-      <h2 className="text-base font-black text-foreground">Active Offers</h2>
-      <div className="mt-3 grid gap-3 sm:grid-cols-3">
-        {product.activeOffers.map((offer) => (
-          <article
-            key={offer.code}
-            className="relative rounded-lg border border-success bg-success/18 p-4 text-center"
-          >
-            <span className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-1/2 rounded-md bg-foreground px-3 py-1 text-[10px] font-black uppercase text-background">
-              {offer.label}
-            </span>
-            <p className="mt-1 text-base font-bold leading-5 text-foreground">
-              {offer.title}
-            </p>
-            <div className="my-3 border-t border-background/70" />
-            <p className="text-sm font-black text-brand">{offer.value}</p>
-            <p className="mt-3 inline-flex items-center gap-1 text-sm font-black text-foreground">
-              Code: {offer.code}
-              <Copy size={13} />
-            </p>
-          </article>
-        ))}
-      </div>
-    </section>
-  );
-}
-
-function ActionBar({ product }: { product: Product }) {
-  const isOutOfStock = product.availability === "out-of-stock";
-
-  return (
-    <div className="mt-7 overflow-hidden rounded-lg border border-border bg-surface">
-      <div className="bg-success px-4 py-1 text-center text-xs font-black text-white">
-        Personalise your product
-      </div>
-      <div className="grid gap-3 p-3 sm:grid-cols-2">
-        <button
-          type="button"
-          disabled={isOutOfStock}
-          className="inline-flex h-12 items-center justify-center gap-2 rounded-lg bg-slate-950 px-5 text-sm font-black text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-surface-strong disabled:text-muted"
-        >
-          <ShoppingCart size={17} />
-          {isOutOfStock ? "Out Of Stock" : "Add To Cart"}
-        </button>
-        <button
-          type="button"
-          disabled={isOutOfStock}
-          className="h-12 rounded-lg bg-success px-5 text-sm font-black text-white transition hover:brightness-95 disabled:cursor-not-allowed disabled:bg-surface-strong disabled:text-muted"
-        >
-          Buy Now
-        </button>
-      </div>
-    </div>
-  );
-}
-
-function ProductBentoGrid({ product }: { product: Product }) {
-  const media = product.images.slice(0, 5);
-
-  return (
-    <section className="mt-12">
-      <div className="mb-5">
-        <p className="text-sm font-black uppercase text-brand">
-          Product images
-        </p>
-        <h2 className="font-display text-3xl font-black text-foreground">
-          A closer look
-        </h2>
-      </div>
-      <div className="grid auto-rows-[180px] gap-3 sm:auto-rows-[220px] md:grid-cols-4">
-        {media.map((image, index) => (
-          <article
-            key={`${image.src}-${index}`}
-            className={
-              index === 0
-                ? "overflow-hidden rounded-xl bg-surface-soft md:col-span-2 md:row-span-2"
-                : "overflow-hidden rounded-xl bg-surface-soft"
-            }
-          >
-            <OptimizedImage
-              src={image.src}
-              alt={image.alt}
-              width={image.width}
-              height={image.height}
-              sizes="(max-width: 768px) 100vw, 50vw"
-              wrapperClassName="h-full w-full"
-              className="h-full w-full object-contain p-8"
-            />
-          </article>
-        ))}
-      </div>
-    </section>
   );
 }
 

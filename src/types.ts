@@ -1,9 +1,10 @@
 export type ImageAsset = {
-  src: `/${string}`;
+  src: string;
   alt: string;
   width: number;
   height: number;
   label: string;
+  resourceType?: "image" | "video" | "gif" | "file";
 };
 
 export type VideoAsset = {
@@ -25,6 +26,7 @@ export type Category = {
   slug: string;
   shortName: string;
   image: ImageAsset;
+  hoverMedia?: ImageAsset;
   href: `/products?category=${string}`;
   description: string;
 };
@@ -85,6 +87,8 @@ export type ProductSpecification = {
 };
 
 export type Product = {
+  id?: string;
+  selectedVariantId?: string;
   slug: string;
   title: string;
   brandSlug: string;
