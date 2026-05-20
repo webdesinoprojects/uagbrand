@@ -12,6 +12,8 @@ import type {
   HeroSlide,
   HomePageData,
   ImageAsset,
+  QuickMenuIcon,
+  QuickMenuItem,
   TrustItem,
 } from "@/types";
 import type { PublicHomeData } from "@/types/api";
@@ -19,7 +21,7 @@ import type { Json, Tables } from "@/types/supabase";
 
 type EmbeddedMedia = Pick<
   Tables<"media_assets">,
-  "alt_text" | "height" | "thumbnail_url" | "url" | "width"
+  "alt_text" | "height" | "resource_type" | "thumbnail_url" | "url" | "width"
 > | null;
 
 type HeroSlideRow = Pick<
@@ -75,6 +77,11 @@ type TrustCardRow = Pick<
   "description" | "metric" | "title"
 >;
 
+type QuickMenuRow = Pick<
+  Tables<"navigation_items">,
+  "href" | "id" | "label"
+>;
+
 const HERO_SELECT = `
   id,
   title,
@@ -85,7 +92,7 @@ const HERO_SELECT = `
   href,
   starts_at,
   ends_at,
-  media:media_assets!hero_slides_media_id_fkey(url,thumbnail_url,alt_text,width,height)
+  media:media_assets!hero_slides_media_id_fkey(url,thumbnail_url,resource_type,alt_text,width,height)
 `;
 
 const COLLECTION_ITEM_SELECT = `
@@ -97,7 +104,7 @@ const COLLECTION_ITEM_SELECT = `
   payload,
   sort_order,
   home_collections!inner(key,status),
-  media:media_assets!collection_items_media_id_fkey(url,thumbnail_url,alt_text,width,height),
+  media:media_assets!collection_items_media_id_fkey(url,thumbnail_url,resource_type,alt_text,width,height),
   products(
     slug,
     title,
@@ -124,7 +131,7 @@ const WAREHOUSE_SELECT = `
   title,
   subtitle,
   href,
-  media:media_assets!warehouse_slides_media_id_fkey(url,thumbnail_url,alt_text,width,height)
+  media:media_assets!warehouse_slides_media_id_fkey(url,thumbnail_url,resource_type,alt_text,width,height)
 `;
 
 const COLLAB_SELECT = `
@@ -132,7 +139,7 @@ const COLLAB_SELECT = `
   title,
   subtitle,
   brands(slug),
-  media:media_assets!brand_collabs_media_id_fkey(url,thumbnail_url,alt_text,width,height)
+  media:media_assets!brand_collabs_media_id_fkey(url,thumbnail_url,resource_type,alt_text,width,height)
 `;
 
 export async function getHomePageDTO(): Promise<HomePageData> {
@@ -169,6 +176,7 @@ export async function getPublicHomePage(): Promise<PublicHomeData> {
       warehouseResult,
       collabResult,
       trustResult,
+      quickMenuResult,
     ] = await Promise.all([
       getPublicCatalog(),
       supabase
@@ -201,6 +209,14 @@ export async function getPublicHomePage(): Promise<PublicHomeData> {
         .select("title,description,metric")
         .eq("status", "published")
         .order("sort_order", { ascending: true }),
+      supabase
+        .from("navigation_items")
+        .select("id,label,href")
+        .eq("status", "published")
+        .eq("location", "quick_menu")
+        .is("parent_id", null)
+        .order("sort_order", { ascending: true })
+        .order("label", { ascending: true }),
     ]);
 
     if (heroResult.error) throw heroResult.error;
@@ -208,6 +224,7 @@ export async function getPublicHomePage(): Promise<PublicHomeData> {
     if (warehouseResult.error) throw warehouseResult.error;
     if (collabResult.error) throw collabResult.error;
     if (trustResult.error) throw trustResult.error;
+    if (quickMenuResult.error) throw quickMenuResult.error;
 
     const heroRows = (heroResult.data ?? []) as unknown as HeroSlideRow[];
     const collectionRows =
@@ -216,6 +233,8 @@ export async function getPublicHomePage(): Promise<PublicHomeData> {
       (warehouseResult.data ?? []) as unknown as WarehouseSlideRow[];
     const collabRows = (collabResult.data ?? []) as unknown as BrandCollabRow[];
     const trustRows = (trustResult.data ?? []) as TrustCardRow[];
+    const quickMenuRows =
+      (quickMenuResult.data ?? []) as unknown as QuickMenuRow[];
 
     const hasDatabaseHomeContent =
       heroRows.length > 0 ||
@@ -223,6 +242,7 @@ export async function getPublicHomePage(): Promise<PublicHomeData> {
       warehouseRows.length > 0 ||
       collabRows.length > 0 ||
       trustRows.length > 0 ||
+      quickMenuRows.length > 0 ||
       catalog.source === "database";
 
     if (!hasDatabaseHomeContent) {
@@ -265,6 +285,10 @@ export async function getPublicHomePage(): Promise<PublicHomeData> {
           trustRows.length > 0
             ? trustRows.map(mapTrustCard)
             : fallback.trustItems,
+        quickMenus:
+          quickMenuRows.length > 0
+            ? quickMenuRows.map(mapQuickMenuItem)
+            : fallback.quickMenus,
       },
       source: "database",
     };
@@ -388,7 +412,38 @@ function mapImageAsset(
     width: asset.width ?? fallback?.width ?? 640,
     height: asset.height ?? fallback?.height ?? 480,
     label: getMediaLabel(src),
+    resourceType: toResourceType(asset.resource_type),
   };
+}
+
+function mapQuickMenuItem(row: QuickMenuRow): QuickMenuItem {
+  return {
+    label: row.label,
+    href: row.href,
+    icon: inferQuickMenuIcon(row),
+  };
+}
+
+function toResourceType(value: string | null | undefined): ImageAsset["resourceType"] {
+  if (value === "image" || value === "gif" || value === "video" || value === "file") {
+    return value;
+  }
+
+  return "image";
+}
+
+function inferQuickMenuIcon(row: QuickMenuRow): QuickMenuIcon {
+  const value = `${row.label} ${row.href}`.toLowerCase();
+
+  if (value.includes("drop") || value.includes("new")) return "zap";
+  if (value.includes("earbud") || value.includes("audio") || value.includes("headphone")) {
+    return "headphones";
+  }
+  if (value.includes("watch")) return "watch";
+  if (value.includes("deliver") || value.includes("truck")) return "truck";
+  if (value.includes("warranty") || value.includes("shield")) return "shield";
+
+  return "badge-percent";
 }
 
 function formatMoney(amount: number, currency: string) {

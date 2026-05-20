@@ -2,7 +2,6 @@
 
 import {
   BadgePercent,
-  BarChart3,
   Boxes,
   FileText,
   Headphones,
@@ -11,14 +10,10 @@ import {
   LayoutDashboard,
   LogOut,
   Menu,
-  MessageSquare,
   Package,
-  ReceiptText,
   Search,
   Settings,
-  ShoppingBag,
   Star,
-  Users,
   X,
 } from "lucide-react";
 import Link from "next/link";
@@ -41,6 +36,7 @@ type NavItem = {
   href: string;
   icon: React.ComponentType<{ size?: number; className?: string }>;
   roles: AdminSessionRole[];
+  status?: "ready" | "planned";
 };
 
 const allStaff: AdminSessionRole[] = ["admin", "editor", "support"];
@@ -58,10 +54,36 @@ const navGroups: { label: string; items: NavItem[] }[] = [
     label: "Catalog",
     items: [
       { label: "Products", href: "/admin/products", icon: Package, roles: catalogRoles },
+      {
+        label: "New Product",
+        href: "/admin/products/new",
+        icon: Package,
+        roles: catalogRoles,
+        status: "planned",
+      },
       { label: "Brands", href: "/admin/brands", icon: Star, roles: catalogRoles },
       { label: "Categories", href: "/admin/categories", icon: Boxes, roles: catalogRoles },
-      { label: "Inventory", href: "/admin/inventory", icon: ShoppingBag, roles: catalogRoles },
-      { label: "Offers", href: "/admin/offers", icon: BadgePercent, roles: catalogRoles },
+      {
+        label: "Specifications",
+        href: "/admin/specifications",
+        icon: FileText,
+        roles: catalogRoles,
+        status: "planned",
+      },
+      {
+        label: "Inventory",
+        href: "/admin/inventory",
+        icon: Boxes,
+        roles: catalogRoles,
+        status: "planned",
+      },
+      {
+        label: "Offers",
+        href: "/admin/offers",
+        icon: BadgePercent,
+        roles: catalogRoles,
+        status: "planned",
+      },
       { label: "Media", href: "/admin/media", icon: Image, roles: catalogRoles },
     ],
   },
@@ -69,41 +91,182 @@ const navGroups: { label: string; items: NavItem[] }[] = [
     label: "Homepage CMS",
     items: [
       { label: "Hero", href: "/admin/home/hero", icon: Home, roles: catalogRoles },
-      { label: "Top Deals", href: "/admin/home/top-deals", icon: BadgePercent, roles: catalogRoles },
+      { label: "Quick Cards", href: "/admin/home/top-deals", icon: BadgePercent, roles: catalogRoles },
+      {
+        label: "Explore Categories",
+        href: "/admin/home/categories",
+        icon: Boxes,
+        roles: catalogRoles,
+        status: "planned",
+      },
       { label: "Warehouse", href: "/admin/home/warehouse", icon: Boxes, roles: catalogRoles },
       { label: "Collabs", href: "/admin/home/collabs", icon: Headphones, roles: catalogRoles },
-      { label: "Trust", href: "/admin/home/trust", icon: Star, roles: catalogRoles },
+      {
+        label: "Trust Cards",
+        href: "/admin/home/trust",
+        icon: Star,
+        roles: catalogRoles,
+        status: "planned",
+      },
     ],
   },
   {
     label: "Orders",
     items: [
-      { label: "Orders", href: "/admin/orders", icon: ReceiptText, roles: supportRoles },
-      { label: "Payments", href: "/admin/payments", icon: ShoppingBag, roles: supportRoles },
-      { label: "Returns", href: "/admin/returns", icon: Package, roles: supportRoles },
+      {
+        label: "Orders",
+        href: "/admin/orders",
+        icon: Package,
+        roles: supportRoles,
+        status: "planned",
+      },
+      {
+        label: "Returns",
+        href: "/admin/returns",
+        icon: Package,
+        roles: supportRoles,
+        status: "planned",
+      },
+      {
+        label: "Payments",
+        href: "/admin/payments",
+        icon: BadgePercent,
+        roles: ["admin"],
+        status: "planned",
+      },
     ],
   },
   {
     label: "Customers",
     items: [
-      { label: "Customers", href: "/admin/customers", icon: Users, roles: supportRoles },
-      { label: "Reviews", href: "/admin/reviews", icon: Star, roles: supportRoles },
-      { label: "Support", href: "/admin/support", icon: MessageSquare, roles: supportRoles },
+      {
+        label: "Customers",
+        href: "/admin/customers",
+        icon: Star,
+        roles: supportRoles,
+        status: "planned",
+      },
+      {
+        label: "Reviews",
+        href: "/admin/reviews",
+        icon: Star,
+        roles: supportRoles,
+        status: "planned",
+      },
+      {
+        label: "Support",
+        href: "/admin/support",
+        icon: Headphones,
+        roles: supportRoles,
+        status: "planned",
+      },
+    ],
+  },
+  {
+    label: "Marketing",
+    items: [
+      {
+        label: "Coupons",
+        href: "/admin/coupons",
+        icon: BadgePercent,
+        roles: catalogRoles,
+        status: "planned",
+      },
+      {
+        label: "Newsletter",
+        href: "/admin/newsletter",
+        icon: FileText,
+        roles: catalogRoles,
+        status: "planned",
+      },
+      {
+        label: "SEO",
+        href: "/admin/seo",
+        icon: Search,
+        roles: catalogRoles,
+        status: "planned",
+      },
     ],
   },
   {
     label: "Content",
     items: [
-      { label: "Pages", href: "/admin/pages", icon: FileText, roles: catalogRoles },
+      {
+        label: "Pages",
+        href: "/admin/pages",
+        icon: FileText,
+        roles: catalogRoles,
+        status: "planned",
+      },
       { label: "Navigation", href: "/admin/navigation", icon: Menu, roles: catalogRoles },
       { label: "Footer", href: "/admin/footer", icon: FileText, roles: catalogRoles },
     ],
   },
   {
-    label: "Reports & Settings",
+    label: "Reports",
     items: [
-      { label: "Reports", href: "/admin/reports/sales", icon: BarChart3, roles: ["admin"] },
-      { label: "Settings", href: "/admin/settings/store", icon: Settings, roles: ["admin"] },
+      {
+        label: "Sales",
+        href: "/admin/reports/sales",
+        icon: BadgePercent,
+        roles: ["admin"],
+        status: "planned",
+      },
+      {
+        label: "Products",
+        href: "/admin/reports/products",
+        icon: Package,
+        roles: ["admin"],
+        status: "planned",
+      },
+      {
+        label: "Customers",
+        href: "/admin/reports/customers",
+        icon: Star,
+        roles: ["admin"],
+        status: "planned",
+      },
+    ],
+  },
+  {
+    label: "Settings",
+    items: [
+      { label: "Store", href: "/admin/settings/store", icon: Settings, roles: ["admin"] },
+      {
+        label: "Users",
+        href: "/admin/settings/users",
+        icon: Star,
+        roles: ["admin"],
+        status: "planned",
+      },
+      {
+        label: "Roles",
+        href: "/admin/settings/roles",
+        icon: Star,
+        roles: ["admin"],
+        status: "planned",
+      },
+      {
+        label: "Shipping",
+        href: "/admin/settings/shipping",
+        icon: Boxes,
+        roles: ["admin"],
+        status: "planned",
+      },
+      {
+        label: "Taxes",
+        href: "/admin/settings/taxes",
+        icon: BadgePercent,
+        roles: ["admin"],
+        status: "planned",
+      },
+      {
+        label: "Audit Logs",
+        href: "/admin/settings/audit-logs",
+        icon: FileText,
+        roles: ["admin"],
+        status: "planned",
+      },
     ],
   },
 ];
@@ -152,7 +315,7 @@ export function AdminShell({ actor, children }: AdminShellProps) {
           </button>
         </div>
 
-        <nav className="flex-1 overflow-y-auto px-4 py-5">
+        <nav className="no-scrollbar flex-1 overflow-y-auto px-4 py-5">
           {visibleGroups.map((group) => (
             <div key={group.label} className="mb-6">
               <p className="px-2 text-[11px] font-black uppercase tracking-wide text-muted">
@@ -161,25 +324,43 @@ export function AdminShell({ actor, children }: AdminShellProps) {
               <div className="mt-2 grid gap-1">
                 {group.items.map((item) => {
                   const Icon = item.icon;
+                  const ready = item.status !== "planned";
                   const active =
                     pathname === item.href ||
                     (item.href !== "/admin" && pathname.startsWith(item.href));
 
-                  return (
+                  const itemClassName = cn(
+                    "flex h-10 items-center gap-3 rounded-lg px-3 text-sm font-black transition",
+                    ready && active
+                      ? "bg-slate-950 text-white"
+                      : ready
+                        ? "text-muted hover:bg-surface-strong hover:text-foreground"
+                        : "cursor-not-allowed text-muted/60",
+                  );
+
+                  return ready ? (
                     <Link
                       key={item.href}
                       href={item.href}
                       onClick={() => setSidebarOpen(false)}
-                      className={cn(
-                        "flex h-10 items-center gap-3 rounded-lg px-3 text-sm font-black transition",
-                        active
-                          ? "bg-slate-950 text-white"
-                          : "text-muted hover:bg-surface-strong hover:text-foreground",
-                      )}
+                      className={itemClassName}
                     >
-                      <Icon size={17} />
-                      {item.label}
+                      <Icon size={17} className="shrink-0" />
+                      <span className="min-w-0 flex-1 truncate">{item.label}</span>
                     </Link>
+                  ) : (
+                    <span
+                      key={item.href}
+                      aria-disabled="true"
+                      title={`${item.label} is planned for Phase 4`}
+                      className={itemClassName}
+                    >
+                      <Icon size={17} className="shrink-0" />
+                      <span className="min-w-0 flex-1 truncate">{item.label}</span>
+                      <span className="rounded-full bg-muted/10 px-1.5 py-0.5 text-[10px] font-black uppercase">
+                        Soon
+                      </span>
+                    </span>
                   );
                 })}
               </div>

@@ -1,7 +1,19 @@
 "use client";
 
 import { upload, type UploadResponse } from "@imagekit/next";
-import { Check, ImageIcon, Loader2, Pencil, Plus, RefreshCw, Trash2 } from "lucide-react";
+import {
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  ImageIcon,
+  Loader2,
+  Pencil,
+  Plus,
+  RefreshCw,
+  Search,
+  Trash2,
+  UploadCloud,
+} from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
 import { cn } from "@/lib/utils";
@@ -26,6 +38,14 @@ export type AdminResourceField = {
   helpText?: string;
   options?: { label: string; value: string }[];
   mediaResourceTypes?: Array<"image" | "video" | "gif" | "file">;
+  uploadFolder?: string;
+  relation?: {
+    endpoint: string;
+    valueKey?: string;
+    labelKey?: string;
+    descriptionKey?: string;
+    pageSize?: number;
+  };
 };
 
 export type AdminResourceColumn = {
@@ -61,13 +81,25 @@ type MediaOption = Pick<
   "altText" | "id" | "resourceType" | "thumbnailUrl" | "url"
 >;
 
+type RelationOption = {
+  label: string;
+  value: string;
+  description?: string;
+};
+
 export function AdminResourcePage({ config }: { config: AdminResourceConfig }) {
   const [items, setItems] = useState<ResourceItem[]>([]);
   const [mediaItems, setMediaItems] = useState<MediaOption[]>([]);
+  const [relationOptions, setRelationOptions] = useState<
+    Record<string, RelationOption[]>
+  >({});
   const [selected, setSelected] = useState<ResourceItem | null>(null);
   const [form, setForm] = useState<Record<string, string>>(toForm(config.defaultValues ?? {}));
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState("");
+  const [page, setPage] = useState(1);
+  const pageSize = 24;
+  const [pagination, setPagination] = useState<PaginationMeta | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -79,13 +111,26 @@ export function AdminResourcePage({ config }: { config: AdminResourceConfig }) {
     [config.fields],
   );
 
-  async function load() {
+  const relationFields = useMemo(
+    () => config.fields.filter((field) => field.relation),
+    [config.fields],
+  );
+
+  async function load(
+    nextPage = page,
+    filters: { q?: string; status?: string } = {},
+  ) {
     setLoading(true);
     setMessage(null);
 
-    const params = new URLSearchParams({ pageSize: "100" });
-    if (query.trim()) params.set("q", query.trim());
-    if (status) params.set("status", status);
+    const params = new URLSearchParams({
+      page: String(nextPage),
+      pageSize: String(pageSize),
+    });
+    const activeQuery = filters.q ?? query;
+    const activeStatus = filters.status ?? status;
+    if (activeQuery.trim()) params.set("q", activeQuery.trim());
+    if (activeStatus) params.set("status", activeStatus);
 
     const response = await fetch(`${config.endpoint}?${params.toString()}`, {
       cache: "no-store",
@@ -99,6 +144,7 @@ export function AdminResourcePage({ config }: { config: AdminResourceConfig }) {
     }
 
     setItems(payload.data.items);
+    setPagination(payload.data.pagination ?? null);
     setLoading(false);
   }
 
@@ -115,15 +161,86 @@ export function AdminResourcePage({ config }: { config: AdminResourceConfig }) {
     }
   }
 
+  async function loadRelationOptions() {
+    if (relationFields.length === 0) return;
+
+    const entries = await Promise.all(
+      relationFields.map(async (field) => {
+        const relation = field.relation;
+        if (!relation) return [field.name, []] as const;
+
+        const params = new URLSearchParams({
+          pageSize: String(relation.pageSize ?? 100),
+        });
+        const response = await fetch(`${relation.endpoint}?${params.toString()}`, {
+          cache: "no-store",
+        });
+        const payload = await parseApi<ResourceListData>(response);
+
+        if (!payload.ok) {
+          return [field.name, []] as const;
+        }
+
+        const options = payload.data.items
+          .map((item) => {
+            const value = getValue(item, relation.valueKey ?? "id");
+            const label =
+              getValue(item, relation.labelKey ?? "title") ??
+              getValue(item, "name") ??
+              getValue(item, "label") ??
+              value;
+            const description = relation.descriptionKey
+              ? getValue(item, relation.descriptionKey)
+              : undefined;
+
+            if (!value || !label) {
+              return null;
+            }
+
+            const option: RelationOption = {
+              value: String(value),
+              label: String(label),
+            };
+
+            if (description !== null && description !== undefined) {
+              option.description = String(description);
+            }
+
+            return option;
+          })
+          .filter((option): option is RelationOption => Boolean(option));
+
+        return [field.name, options] as const;
+      }),
+    );
+
+    setRelationOptions(Object.fromEntries(entries));
+  }
+
   useEffect(() => {
     const timer = window.setTimeout(() => {
       void load();
       void loadMedia();
+      void loadRelationOptions();
     }, 0);
 
     return () => window.clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [config.endpoint]);
+  }, [config.endpoint, page]);
+
+  function applyFilters(event?: React.FormEvent<HTMLFormElement>) {
+    event?.preventDefault();
+    setPage(1);
+    void load(1);
+  }
+
+  function goToPage(nextPage: number) {
+    if (!pagination) return;
+    const clamped = Math.min(Math.max(nextPage, 1), Math.max(pagination.pageCount, 1));
+    if (clamped !== page) {
+      setPage(clamped);
+    }
+  }
 
   function startCreate() {
     setSelected(null);
@@ -185,11 +302,23 @@ export function AdminResourcePage({ config }: { config: AdminResourceConfig }) {
     await load();
   }
 
-  async function uploadFile(file: File) {
+  async function uploadFile(file: File, targetField?: AdminResourceField) {
     setUploading(true);
     setMessage(null);
 
     try {
+      const localResourceType = getLocalFileResourceType(file);
+      const allowedTypes = targetField?.mediaResourceTypes;
+      if (allowedTypes?.length && !allowedTypes.includes(localResourceType)) {
+        setMessage(
+          `Choose a ${formatResourceTypes(allowedTypes)} file for ${
+            targetField?.label ?? "this field"
+          }.`,
+        );
+        setUploading(false);
+        return;
+      }
+
       const signatureResponse = await fetch("/api/admin/media/upload-signature", {
         method: "POST",
       });
@@ -206,7 +335,7 @@ export function AdminResourcePage({ config }: { config: AdminResourceConfig }) {
       const uploaded = await upload({
         file,
         fileName: file.name,
-        folder: normalizeImageKitFolder(uploadFolder),
+        folder: normalizeImageKitFolder(targetField?.uploadFolder ?? uploadFolder),
         publicKey: signaturePayload.data.publicKey,
         signature: signaturePayload.data.signature,
         expire: signaturePayload.data.expire,
@@ -234,7 +363,7 @@ export function AdminResourcePage({ config }: { config: AdminResourceConfig }) {
           durationSeconds: uploaded.metadata?.duration ?? null,
           bytes: uploaded.size ?? uploaded.metadata?.size ?? file.size,
           mimeType: file.type || null,
-          folder: normalizeImageKitFolder(uploadFolder),
+          folder: normalizeImageKitFolder(targetField?.uploadFolder ?? uploadFolder),
           metadata: uploaded.metadata ?? {},
         }),
       });
@@ -246,10 +375,19 @@ export function AdminResourcePage({ config }: { config: AdminResourceConfig }) {
         return;
       }
 
-      setSelected(created.data);
-      setForm(toForm(created.data));
-      setMessage("Media uploaded and saved.");
-      await Promise.all([load(), loadMedia()]);
+      if (targetField) {
+        setForm((current) => ({
+          ...current,
+          [targetField.name]: String(created.data.id),
+        }));
+        setMessage(`${targetField.label} uploaded and selected.`);
+        await loadMedia();
+      } else {
+        setSelected(created.data);
+        setForm(toForm(created.data));
+        setMessage("Media uploaded and saved.");
+        await Promise.all([load(), loadMedia()]);
+      }
     } catch (error) {
       console.error("[admin:media-upload]", error);
       setMessage("Media upload failed. Please check the file and try again.");
@@ -282,13 +420,24 @@ export function AdminResourcePage({ config }: { config: AdminResourceConfig }) {
 
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_430px]">
         <section className="rounded-lg border border-border bg-surface p-4 shadow-[var(--shadow-soft)]">
-          <div className="flex flex-col gap-3 md:flex-row md:items-center">
-            <input
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder={config.searchPlaceholder ?? "Search"}
-              className="h-11 min-w-0 flex-1 rounded-lg border border-border bg-background px-3 text-sm font-bold outline-none transition focus:border-brand"
-            />
+          <form
+            onSubmit={applyFilters}
+            className="flex flex-col gap-3 md:flex-row md:items-center"
+          >
+            <label className="relative min-w-0 flex-1">
+              <span className="sr-only">{config.searchPlaceholder ?? "Search"}</span>
+              <Search
+                aria-hidden="true"
+                size={17}
+                className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted"
+              />
+              <input
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder={config.searchPlaceholder ?? "Search"}
+                className="h-11 w-full min-w-0 rounded-lg border border-border bg-background pl-10 pr-3 text-sm font-bold outline-none transition focus:border-brand"
+              />
+            </label>
             <select
               value={status}
               onChange={(event) => setStatus(event.target.value)}
@@ -300,16 +449,28 @@ export function AdminResourcePage({ config }: { config: AdminResourceConfig }) {
               <option value="archived">Archived</option>
             </select>
             <button
+              type="submit"
+              className="inline-flex h-11 items-center justify-center gap-2 rounded-lg border border-border px-4 text-sm font-black transition hover:border-brand"
+            >
+              <Search size={16} />
+              Search
+            </button>
+            <button
               type="button"
-              onClick={load}
+              onClick={() => {
+                setQuery("");
+                setStatus("");
+                setPage(1);
+                void load(1, { q: "", status: "" });
+              }}
               className="inline-flex h-11 items-center justify-center gap-2 rounded-lg border border-border px-4 text-sm font-black transition hover:border-brand"
             >
               <RefreshCw size={16} />
-              Refresh
+              Reset
             </button>
-          </div>
+          </form>
 
-          <div className="mt-4 overflow-x-auto">
+          <div className="no-scrollbar mt-4 overflow-x-auto">
             <table className="w-full min-w-[760px] border-separate border-spacing-0 text-left">
               <thead>
                 <tr>
@@ -388,6 +549,11 @@ export function AdminResourcePage({ config }: { config: AdminResourceConfig }) {
               </tbody>
             </table>
           </div>
+
+          <PaginationControls
+            pagination={pagination}
+            onPageChange={goToPage}
+          />
         </section>
 
         <aside className="rounded-lg border border-border bg-surface p-5 shadow-[var(--shadow-soft)]">
@@ -444,9 +610,12 @@ export function AdminResourcePage({ config }: { config: AdminResourceConfig }) {
                 field={field}
                 value={form[field.name] ?? ""}
                 mediaItems={mediaItems}
+                relationOptions={relationOptions[field.name] ?? []}
+                uploading={uploading}
                 onChange={(value) =>
                   setForm((current) => ({ ...current, [field.name]: value }))
                 }
+                onUpload={(file) => uploadFile(file, field)}
               />
             ))}
 
@@ -475,12 +644,18 @@ function FieldControl({
   field,
   value,
   mediaItems,
+  relationOptions,
+  uploading,
   onChange,
+  onUpload,
 }: {
   field: AdminResourceField;
   value: string;
   mediaItems: MediaOption[];
+  relationOptions: RelationOption[];
+  uploading: boolean;
   onChange: (value: string) => void;
+  onUpload: (file: File) => void;
 }) {
   const label = (
     <span>
@@ -506,6 +681,10 @@ function FieldControl({
   }
 
   if (field.type === "select") {
+    const options: RelationOption[] = field.relation
+      ? relationOptions
+      : field.options ?? [];
+
     return (
       <label className="grid gap-2 text-xs font-black uppercase text-muted">
         {label}
@@ -514,9 +693,12 @@ function FieldControl({
           onChange={(event) => onChange(event.target.value)}
           className="h-11 rounded-lg border border-border bg-background px-3 text-sm font-bold normal-case text-foreground outline-none transition focus:border-brand"
         >
-          {field.options?.map((option) => (
+          {field.relation ? <option value="">Select {field.label.toLowerCase()}</option> : null}
+          {options.map((option) => (
             <option key={option.value} value={option.value}>
-              {option.label}
+              {option.description
+                ? `${option.label} - ${option.description}`
+                : option.label}
             </option>
           ))}
         </select>
@@ -533,20 +715,41 @@ function FieldControl({
     const selectedMedia = mediaItems.find((item) => item.id === value);
 
     return (
-      <label className="grid gap-2 text-xs font-black uppercase text-muted">
-        {label}
-        <select
-          value={value}
-          onChange={(event) => onChange(event.target.value)}
-          className="h-11 rounded-lg border border-border bg-background px-3 text-sm font-bold normal-case text-foreground outline-none transition focus:border-brand"
-        >
-          <option value="">No media selected</option>
-          {options.map((media) => (
-            <option key={media.id} value={media.id}>
-              {media.altText || media.url.split("/").pop() || media.id} ({media.resourceType})
-            </option>
-          ))}
-        </select>
+      <div className="grid gap-2 text-xs font-black uppercase text-muted">
+        <span>{label}</span>
+        <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto]">
+          <select
+            value={value}
+            onChange={(event) => onChange(event.target.value)}
+            className="h-11 min-w-0 rounded-lg border border-border bg-background px-3 text-sm font-bold normal-case text-foreground outline-none transition focus:border-brand"
+          >
+            <option value="">No media selected</option>
+            {options.map((media) => (
+              <option key={media.id} value={media.id}>
+                {media.altText || media.url.split("/").pop() || media.id} ({media.resourceType})
+              </option>
+            ))}
+          </select>
+          <label className="inline-flex h-11 cursor-pointer items-center justify-center gap-2 rounded-lg border border-border px-3 text-xs font-black normal-case text-foreground transition hover:border-brand hover:text-brand">
+            {uploading ? (
+              <Loader2 size={15} className="animate-spin" />
+            ) : (
+              <UploadCloud size={15} />
+            )}
+            Upload
+            <input
+              type="file"
+              accept={getAcceptForField(field)}
+              disabled={uploading}
+              className="sr-only"
+              onChange={(event) => {
+                const file = event.target.files?.[0];
+                event.target.value = "";
+                if (file) onUpload(file);
+              }}
+            />
+          </label>
+        </div>
         {selectedMedia ? (
           <span className="flex items-center gap-3 rounded-lg border border-border bg-background p-2 normal-case text-foreground">
             <MediaThumb media={selectedMedia} />
@@ -559,7 +762,7 @@ function FieldControl({
           </span>
         ) : null}
         {field.helpText ? <HelpText>{field.helpText}</HelpText> : null}
-      </label>
+      </div>
     );
   }
 
@@ -575,6 +778,79 @@ function FieldControl({
       />
       {field.helpText ? <HelpText>{field.helpText}</HelpText> : null}
     </label>
+  );
+}
+
+function PaginationControls({
+  pagination,
+  onPageChange,
+}: {
+  pagination: PaginationMeta | null;
+  onPageChange: (page: number) => void;
+}) {
+  if (!pagination) {
+    return null;
+  }
+
+  const from = pagination.total === 0 ? 0 : (pagination.page - 1) * pagination.pageSize + 1;
+  const to = Math.min(pagination.page * pagination.pageSize, pagination.total);
+  const pageItems = getPaginationItems(pagination.page, pagination.pageCount);
+
+  return (
+    <div className="mt-4 flex flex-col gap-3 rounded-xl border border-border bg-background p-3 text-sm font-bold text-muted lg:flex-row lg:items-center lg:justify-between">
+      <div className="flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          disabled={pagination.page <= 1}
+          onClick={() => onPageChange(pagination.page - 1)}
+          className="inline-flex h-10 items-center gap-2 rounded-lg border border-border px-3 font-black text-foreground transition hover:border-brand disabled:cursor-not-allowed disabled:opacity-45"
+        >
+          <ChevronLeft size={16} />
+          Previous
+        </button>
+
+        <div className="flex flex-wrap items-center gap-1">
+          {pageItems.map((item, index) =>
+            item === "ellipsis" ? (
+              <span
+                key={`ellipsis-${index}`}
+                className="grid h-10 w-10 place-items-center text-muted"
+              >
+                ...
+              </span>
+            ) : (
+              <button
+                key={item}
+                type="button"
+                onClick={() => onPageChange(item)}
+                className={cn(
+                  "grid h-10 w-10 place-items-center rounded-lg border text-sm font-black transition",
+                  item === pagination.page
+                    ? "border-brand bg-brand text-white shadow-sm"
+                    : "border-border text-foreground hover:border-brand",
+                )}
+              >
+                {item}
+              </button>
+            ),
+          )}
+        </div>
+
+        <button
+          type="button"
+          disabled={pagination.page >= pagination.pageCount}
+          onClick={() => onPageChange(pagination.page + 1)}
+          className="inline-flex h-10 items-center gap-2 rounded-lg border border-border px-3 font-black text-foreground transition hover:border-brand disabled:cursor-not-allowed disabled:opacity-45"
+        >
+          Next
+          <ChevronRight size={16} />
+        </button>
+      </div>
+
+      <span>
+        Showing {from}-{to} of {pagination.total} results
+      </span>
+    </div>
   );
 }
 
@@ -723,6 +999,12 @@ function getResourceType(
   file: File,
   uploaded: UploadResponse,
 ): MediaResourceType {
+  const localType = getLocalFileResourceType(file);
+
+  if (localType !== "file") {
+    return localType;
+  }
+
   if (file.type === "image/gif" || uploaded.url?.toLowerCase().endsWith(".gif")) {
     return "gif";
   }
@@ -736,4 +1018,81 @@ function getResourceType(
   }
 
   return "file";
+}
+
+function getLocalFileResourceType(file: File): MediaResourceType {
+  const lowerName = file.name.toLowerCase();
+
+  if (file.type === "image/gif" || lowerName.endsWith(".gif")) {
+    return "gif";
+  }
+
+  if (file.type.startsWith("video/")) {
+    return "video";
+  }
+
+  if (file.type.startsWith("image/")) {
+    return "image";
+  }
+
+  return "file";
+}
+
+function getAcceptForField(field: AdminResourceField) {
+  const types = field.mediaResourceTypes;
+
+  if (!types?.length) {
+    return "image/*,video/*";
+  }
+
+  const accept = new Set<string>();
+  if (types.includes("image")) accept.add("image/*");
+  if (types.includes("gif")) accept.add("image/gif");
+  if (types.includes("video")) accept.add("video/*");
+  if (types.includes("file")) accept.add("*/*");
+
+  return Array.from(accept).join(",");
+}
+
+function formatResourceTypes(types: AdminResourceField["mediaResourceTypes"]) {
+  return types?.join(", ") ?? "supported";
+}
+
+function getPaginationItems(currentPage: number, pageCount: number) {
+  if (pageCount <= 7) {
+    return Array.from({ length: pageCount }, (_, index) => index + 1);
+  }
+
+  const pages = new Set<number>([1, pageCount, currentPage]);
+
+  for (const page of [currentPage - 1, currentPage + 1]) {
+    if (page > 1 && page < pageCount) {
+      pages.add(page);
+    }
+  }
+
+  if (currentPage <= 4) {
+    for (let page = 2; page <= 5; page += 1) {
+      pages.add(page);
+    }
+  }
+
+  if (currentPage >= pageCount - 3) {
+    for (let page = pageCount - 4; page < pageCount; page += 1) {
+      if (page > 1) pages.add(page);
+    }
+  }
+
+  const sorted = Array.from(pages).sort((a, b) => a - b);
+  const result: Array<number | "ellipsis"> = [];
+
+  sorted.forEach((page, index) => {
+    const previous = sorted[index - 1];
+    if (previous && page - previous > 1) {
+      result.push("ellipsis");
+    }
+    result.push(page);
+  });
+
+  return result;
 }

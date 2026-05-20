@@ -6,6 +6,7 @@ import {
   Watch,
   Zap,
 } from "lucide-react";
+import Link from "next/link";
 import type { ComponentType } from "react";
 
 import type { QuickMenuIcon, QuickMenuItem } from "@/types";
@@ -32,15 +33,16 @@ export function QuickMenuRail({ items }: QuickMenuRailProps) {
             const Icon = iconMap[item.icon];
 
             return (
-              <div
+              <Link
                 key={item.label}
-                className="flex h-20 min-w-48 snap-start cursor-default items-center gap-4 rounded-lg border border-border bg-surface px-5 text-base font-extrabold text-foreground shadow-sm sm:min-w-52"
+                href={item.href}
+                className="flex h-20 min-w-48 snap-start items-center gap-4 rounded-lg border border-border bg-surface px-5 text-base font-extrabold text-foreground shadow-sm transition hover:border-brand hover:shadow-md sm:min-w-52"
               >
                 <span className="grid h-12 w-12 shrink-0 place-items-center rounded-lg border border-border bg-background text-foreground">
                   <Icon size={21} />
                 </span>
                 {item.label}
-              </div>
+              </Link>
             );
           })}
         </div>
