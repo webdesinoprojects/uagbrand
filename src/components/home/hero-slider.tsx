@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
@@ -99,50 +99,29 @@ export function HeroSlider({ slides }: HeroSliderProps) {
         </Link>
 
         {slides.length > 1 ? (
-          <>
-            <button
-              type="button"
-              aria-label="Previous hero slide"
-              onClick={previousSlide}
-              onPointerDown={(event) => event.stopPropagation()}
-              className="absolute left-5 top-1/2 z-20 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-md bg-white/78 text-slate-950 shadow-lg backdrop-blur transition hover:bg-white md:left-3 lg:left-5 lg:h-12 lg:w-12"
-            >
-              <ArrowLeft size={21} />
-            </button>
-            <button
-              type="button"
-              aria-label="Next hero slide"
-              onClick={nextSlide}
-              onPointerDown={(event) => event.stopPropagation()}
-              className="absolute right-5 top-1/2 z-20 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-md bg-white/78 text-slate-950 shadow-lg backdrop-blur transition hover:bg-white md:right-3 lg:right-5 lg:h-12 lg:w-12"
-            >
-              <ArrowRight size={21} />
-            </button>
-
-            <div className="absolute inset-x-0 bottom-7 z-20 flex items-center justify-center gap-3 px-5">
-              <span className="rounded-md bg-black/38 px-2 py-1 font-mono text-xs font-bold text-white backdrop-blur">
-                {String(activeIndex + 1).padStart(2, "0")} /{" "}
-                {String(slides.length).padStart(2, "0")}
-              </span>
-              <div className="flex max-w-[56vw] items-center gap-1.5 overflow-x-auto no-scrollbar sm:max-w-none sm:gap-2">
-                {slides.map((slide, index) => (
-                  <button
-                    key={slide.id}
-                    type="button"
-                    aria-label={`Show ${slide.title}`}
-                    onClick={() => setActiveIndex(index)}
-                    onPointerDown={(event) => event.stopPropagation()}
-                    className={cn(
-                      "h-1.5 shrink-0 rounded-full transition-all",
-                      index === activeIndex
-                        ? "w-10 bg-brand sm:w-16"
-                        : "w-5 bg-white/55 hover:bg-white sm:w-9",
-                    )}
-                  />
-                ))}
-              </div>
+          <div className="absolute inset-x-0 bottom-7 z-20 flex items-center justify-center gap-3 px-5">
+            <span className="rounded-md bg-black/38 px-2 py-1 font-mono text-xs font-bold text-white backdrop-blur">
+              {String(activeIndex + 1).padStart(2, "0")} /{" "}
+              {String(slides.length).padStart(2, "0")}
+            </span>
+            <div className="flex max-w-[56vw] items-center gap-1.5 overflow-x-auto no-scrollbar sm:max-w-none sm:gap-2">
+              {slides.map((slide, index) => (
+                <button
+                  key={slide.id}
+                  type="button"
+                  aria-label={`Show ${slide.title}`}
+                  onClick={() => setActiveIndex(index)}
+                  onPointerDown={(event) => event.stopPropagation()}
+                  className={cn(
+                    "h-1.5 shrink-0 rounded-full transition-all",
+                    index === activeIndex
+                      ? "w-10 bg-brand sm:w-16"
+                      : "w-5 bg-white/55 hover:bg-white sm:w-9",
+                  )}
+                />
+              ))}
             </div>
-          </>
+          </div>
         ) : null}
       </article>
     </section>

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Heart, PackageCheck, Star, Truck } from "lucide-react";
+import { Heart, Star, Truck } from "lucide-react";
 import { notFound } from "next/navigation";
 
 import {
@@ -251,18 +251,6 @@ function InfoCards({
           <p className="max-w-md text-sm font-bold leading-6 text-foreground">
             {product.usersLove}
           </p>
-        </div>
-      </div>
-
-      <div>
-        <h2 className="text-base font-black text-foreground">
-          Rewards and Payment Offers
-        </h2>
-        <div className="mt-3 flex items-center justify-between gap-3 rounded-lg bg-surface-soft p-4">
-          <p className="text-sm font-bold leading-6 text-foreground">
-            {product.rewardText}
-          </p>
-          <PackageCheck size={28} className="text-danger" />
         </div>
       </div>
 
