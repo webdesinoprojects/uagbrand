@@ -230,6 +230,22 @@ export function AdminResourcePage({ config }: { config: AdminResourceConfig }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [config.endpoint, page]);
 
+  // External components (e.g. the bulk media uploader) can fire
+  // "admin-resource-refresh" with a matching `endpoint` to trigger a reload
+  // without coupling to internal state.
+  useEffect(() => {
+    function handler(event: Event) {
+      const detail = (event as CustomEvent<{ endpoint?: string }>).detail;
+      if (!detail?.endpoint || detail.endpoint === config.endpoint) {
+        void load();
+        void loadMedia();
+      }
+    }
+    window.addEventListener("admin-resource-refresh", handler);
+    return () => window.removeEventListener("admin-resource-refresh", handler);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [config.endpoint]);
+
   function applyFilters(event?: React.FormEvent<HTMLFormElement>) {
     event?.preventDefault();
     setPage(1);

@@ -2,6 +2,7 @@ import {
   AdminResourcePage,
   type AdminResourceConfig,
 } from "@/components/admin/admin-resource-page";
+import { MediaUploaderClient } from "@/components/admin/media-uploader-client";
 
 export const metadata = {
   title: "Media | Admin",
@@ -55,5 +56,10 @@ const config: AdminResourceConfig = {
 };
 
 export default function AdminMediaPage() {
-  return <AdminResourcePage config={config} />;
+  return (
+    <div className="grid gap-6">
+      <MediaUploaderClient defaultFolder="cms" />
+      <AdminResourcePage config={config} />
+    </div>
+  );
 }
