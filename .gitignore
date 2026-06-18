@@ -30,8 +30,18 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 dev-server*.log
+logs.txt
 
 # env files (can opt-in for committing if needed)
+.env*
+env.txt
+
+# local planning/context files
+/dev/
+/.claude/
+/.vscode/
+context.md
+p-3-context.md
 
 # vercel
 .vercel

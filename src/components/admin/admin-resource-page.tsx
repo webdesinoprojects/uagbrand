@@ -15,6 +15,7 @@ import {
   UploadCloud,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 
 import { cn } from "@/lib/utils";
 import type {
@@ -64,6 +65,7 @@ export type AdminResourceConfig = {
   fields: AdminResourceField[];
   columns: AdminResourceColumn[];
   defaultValues?: Record<string, string | number | null>;
+  createHref?: string;
 };
 
 type ResourceListData = {
@@ -408,14 +410,24 @@ export function AdminResourcePage({ config }: { config: AdminResourceConfig }) {
             {config.description}
           </p>
         </div>
-        <button
-          type="button"
-          onClick={startCreate}
-          className="inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-slate-950 px-4 text-sm font-black text-white transition hover:bg-brand"
-        >
-          <Plus size={17} />
-          New {config.singularLabel}
-        </button>
+        {config.createHref ? (
+          <Link
+            href={config.createHref}
+            className="inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-slate-950 px-4 text-sm font-black text-white transition hover:bg-brand"
+          >
+            <Plus size={17} />
+            New {config.singularLabel}
+          </Link>
+        ) : (
+          <button
+            type="button"
+            onClick={startCreate}
+            className="inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-slate-950 px-4 text-sm font-black text-white transition hover:bg-brand"
+          >
+            <Plus size={17} />
+            New {config.singularLabel}
+          </button>
+        )}
       </section>
 
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_430px]">

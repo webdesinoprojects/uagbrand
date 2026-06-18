@@ -287,10 +287,37 @@ function mapProductRow(row: ProductRow): Product | null {
   const media = (row.product_media ?? [])
     .slice()
     .sort((a, b) => a.sort_order - b.sort_order)
-    .map((item) => item.media_assets)
-    .filter((asset): asset is NonNullable<typeof asset> => Boolean(asset));
+    .map((item) => ({
+      role: item.role,
+      asset: item.media_assets,
+    }))
+    .filter(
+      (item): item is { role: string; asset: NonNullable<typeof item.asset> } =>
+        Boolean(item.asset),
+    );
 
-  const images = media.length > 0 ? media.map(mapImageAsset) : [fallbackImage(categorySlug)];
+  const imageMedia = media
+    .filter((item) => item.asset.resource_type !== "video")
+    .map((item) => ({
+      role: item.role,
+      image: mapImageAsset(item.asset),
+    }));
+  const galleryImages = imageMedia
+    .filter((item) => item.role.startsWith("gallery"))
+    .map((item) => item.image);
+  const bentoImages = imageMedia
+    .filter((item) => item.role.startsWith("bento"))
+    .map((item) => item.image);
+  const fallback = fallbackImage(categorySlug);
+  const images =
+    galleryImages.length > 0
+      ? galleryImages
+      : imageMedia.length > 0
+        ? imageMedia.map((item) => item.image)
+        : [fallback];
+  const productVideo = media
+    .filter((item) => item.asset.resource_type === "video")
+    .map((item) => mapImageAsset(item.asset))[0];
   const compareAt = selectedVariant.compare_at_amount ?? selectedVariant.price_amount;
 
   return {
@@ -320,6 +347,9 @@ function mapProductRow(row: ProductRow): Product | null {
     rewardText: `Earn upto ${Math.max(10, Math.floor(selectedVariant.price_amount / 20))} reward points on this product`,
     activeOffers: mapOffers(row.product_offer_links),
     images,
+    galleryImages: images,
+    bentoImages: bentoImages.length > 0 ? bentoImages : images,
+    productVideo,
     specifications: mapSpecifications(row.product_specifications, row.categories?.name),
   };
 }
@@ -331,6 +361,7 @@ function mapImageAsset(asset: NonNullable<ProductRow["product_media"][number]["m
     width: asset.width ?? 640,
     height: asset.height ?? 480,
     label: getMediaLabel(asset.url),
+    resourceType: asset.resource_type as ImageAsset["resourceType"],
   };
 }
 

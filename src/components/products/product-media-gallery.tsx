@@ -28,7 +28,7 @@ const DEMO_VIDEO_SRC = "/assets/content/our-product-video.mp4";
 const IMAGE_SLOT_COUNT = 5;
 
 export function ProductMediaGallery({ product }: ProductMediaGalleryProps) {
-  const mediaItems = useProductMediaItems(product);
+  const mediaItems = useProductMediaItems(product, "gallery");
   const [activeIndex, setActiveIndex] = useState(0);
   const [zoomImage, setZoomImage] = useState<ImageAsset | null>(null);
   const activeItem = mediaItems[activeIndex] ?? mediaItems[0];
@@ -149,7 +149,7 @@ export function ProductMediaGallery({ product }: ProductMediaGalleryProps) {
 }
 
 export function ProductBentoMediaGrid({ product }: ProductMediaGalleryProps) {
-  const mediaItems = useProductMediaItems(product);
+  const mediaItems = useProductMediaItems(product, "bento");
 
   return (
     <section className="mt-12">
@@ -161,21 +161,19 @@ export function ProductBentoMediaGrid({ product }: ProductMediaGalleryProps) {
           A closer look
         </h2>
       </div>
-      <div className="grid auto-rows-[170px] gap-3 sm:auto-rows-[210px] md:grid-cols-4">
+      <div className="grid gap-3 md:grid-cols-4 md:auto-rows-[190px] lg:auto-rows-[220px]">
         {mediaItems.map((item, index) => (
           <article
             key={`${item.label}-${index}`}
             className={getBentoItemClassName(index)}
           >
             {item.type === "image" ? (
-              <OptimizedImage
+              <Image
                 src={item.image.src}
                 alt={item.image.alt}
-                width={item.image.width}
-                height={item.image.height}
+                fill
                 sizes="(max-width: 768px) 100vw, 50vw"
-                wrapperClassName="h-full w-full"
-                className="h-full w-full object-contain p-8"
+                className={getBentoImageClassName(index)}
               />
             ) : (
               <video
@@ -185,7 +183,7 @@ export function ProductBentoMediaGrid({ product }: ProductMediaGalleryProps) {
                 playsInline
                 preload="metadata"
                 poster={item.poster.src}
-                className="h-full w-full bg-surface-soft object-cover"
+                className="absolute inset-0 h-full w-full object-cover"
               >
                 <source src={item.src} type="video/mp4" />
               </video>
@@ -198,7 +196,8 @@ export function ProductBentoMediaGrid({ product }: ProductMediaGalleryProps) {
 }
 
 function getBentoItemClassName(index: number) {
-  const base = "overflow-hidden rounded-xl bg-surface-soft";
+  const base =
+    "relative min-h-[190px] overflow-hidden rounded-xl bg-slate-950 shadow-sm";
 
   if (index === 0) {
     return `${base} md:col-span-2 md:row-span-2`;
@@ -211,12 +210,34 @@ function getBentoItemClassName(index: number) {
   return base;
 }
 
-function useProductMediaItems(product: Product) {
-  return useMemo(() => buildProductMediaItems(product), [product]);
+function getBentoImageClassName(index: number) {
+  const base = "object-cover";
+
+  if (index === 0) {
+    return `${base} scale-[1.9]`;
+  }
+
+  if (index === 1 || index === 3) {
+    return `${base} scale-[1.45]`;
+  }
+
+  return `${base} scale-[1.16]`;
 }
 
-function buildProductMediaItems(product: Product): MediaItem[] {
-  const images = product.images.length > 0 ? product.images : [];
+function useProductMediaItems(product: Product, surface: "gallery" | "bento") {
+  return useMemo(() => buildProductMediaItems(product, surface), [product, surface]);
+}
+
+function buildProductMediaItems(
+  product: Product,
+  surface: "gallery" | "bento",
+): MediaItem[] {
+  const images =
+    surface === "bento" && product.bentoImages && product.bentoImages.length > 0
+      ? product.bentoImages
+      : product.galleryImages && product.galleryImages.length > 0
+      ? product.galleryImages
+      : product.images.filter((image) => image.resourceType !== "video");
   const firstImage = images[0];
 
   if (!firstImage) {
@@ -234,7 +255,7 @@ function buildProductMediaItems(product: Product): MediaItem[] {
     {
       type: "video",
       poster: firstImage,
-      src: DEMO_VIDEO_SRC,
+      src: product.productVideo?.src ?? DEMO_VIDEO_SRC,
       label: `${product.title} video`,
     },
   ];

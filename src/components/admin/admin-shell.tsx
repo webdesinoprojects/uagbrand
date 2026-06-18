@@ -59,7 +59,6 @@ const navGroups: { label: string; items: NavItem[] }[] = [
         href: "/admin/products/new",
         icon: Package,
         roles: catalogRoles,
-        status: "planned",
       },
       { label: "Brands", href: "/admin/brands", icon: Star, roles: catalogRoles },
       { label: "Categories", href: "/admin/categories", icon: Boxes, roles: catalogRoles },

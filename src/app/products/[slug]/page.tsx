@@ -98,6 +98,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
         </section>
 
         <ProductBentoMediaGrid product={product} />
+        <ProductDescription product={product} />
         <ProductSpecifications product={product} />
         <SimilarProductsCarousel brand={brand} products={similarProducts} />
       </main>
@@ -260,6 +261,22 @@ function InfoCards({
         flow.
       </div>
     </div>
+  );
+}
+
+function ProductDescription({ product }: { product: Product }) {
+  return (
+    <section className="mt-12 rounded-xl border border-border bg-surface px-5 py-7 shadow-[var(--shadow-soft)] sm:px-8">
+      <p className="text-sm font-black uppercase text-brand">
+        Product details
+      </p>
+      <h2 className="mt-2 font-display text-3xl font-black text-foreground">
+        Detailed description
+      </h2>
+      <p className="mt-4 max-w-4xl whitespace-pre-line text-sm font-semibold leading-7 text-muted sm:text-base">
+        {product.description}
+      </p>
+    </section>
   );
 }
 

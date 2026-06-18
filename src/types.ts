@@ -111,6 +111,9 @@ export type Product = {
   rewardText: string;
   activeOffers: ProductOffer[];
   images: ImageAsset[];
+  galleryImages?: ImageAsset[];
+  bentoImages?: ImageAsset[];
+  productVideo?: ImageAsset;
   specifications: ProductSpecification[];
 };
 

@@ -12,8 +12,9 @@ const config: AdminResourceConfig = {
   title: "Products",
   singularLabel: "product",
   description:
-    "Create and edit the public product record. Variants, media, offers and specs stay on the product sub-resources.",
+    "Create complete products from New Product. This table is for quick catalog edits.",
   endpoint: "/api/admin/products",
+  createHref: "/admin/products/new",
   searchPlaceholder: "Search products, slugs or descriptions",
   defaultValues: {
     status: "published",
