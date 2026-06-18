@@ -39,6 +39,10 @@ type NavItem = {
   status?: "ready" | "planned";
 };
 
+function isMatchingAdminRoute(pathname: string, href: string) {
+  return pathname === href || (href !== "/admin" && pathname.startsWith(`${href}/`));
+}
+
 const allStaff: AdminSessionRole[] = ["admin", "editor", "support"];
 const catalogRoles: AdminSessionRole[] = ["admin", "editor"];
 const supportRoles: AdminSessionRole[] = ["admin", "support"];
@@ -286,6 +290,13 @@ export function AdminShell({ actor, children }: AdminShellProps) {
     [actor.role],
   );
 
+  const activeHref = useMemo(() => {
+    return visibleGroups
+      .flatMap((group) => group.items)
+      .filter((item) => item.status !== "planned" && isMatchingAdminRoute(pathname, item.href))
+      .sort((left, right) => right.href.length - left.href.length)[0]?.href;
+  }, [pathname, visibleGroups]);
+
   async function logout() {
     await fetch("/api/admin/session", { method: "DELETE" }).catch(() => null);
     router.replace("/admin/login");
@@ -324,9 +335,7 @@ export function AdminShell({ actor, children }: AdminShellProps) {
                 {group.items.map((item) => {
                   const Icon = item.icon;
                   const ready = item.status !== "planned";
-                  const active =
-                    pathname === item.href ||
-                    (item.href !== "/admin" && pathname.startsWith(item.href));
+                  const active = item.href === activeHref;
 
                   const itemClassName = cn(
                     "flex h-10 items-center gap-3 rounded-lg px-3 text-sm font-black transition",
